@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: "streamer-python"
+    static_configs:
+      - targets: ["streamer:8000"]
+
+  - job_name: "rust-policy-executor"
+    static_configs:
+      - targets: ["policy-executor:9097"]  

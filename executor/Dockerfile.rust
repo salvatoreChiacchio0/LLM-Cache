@@ -1,0 +1,11 @@
+FROM rust:1.86-alpine as builder
+RUN apk add --no-cache musl-dev pkgconfig openssl-dev cmake build-base
+WORKDIR /app
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo build --release
+FROM alpine:latest
+RUN apk add --no-cache libgcc
+COPY --from=builder /app/target/release/executor /usr/local/bin/
+EXPOSE 9097
+CMD ["executor"]

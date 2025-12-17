@@ -1,0 +1,213 @@
+version: '3.9'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    mem_limit: 6g
+    cpus: 2
+    environment:
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_KEEP_ALIVE=10m
+
+  redis-llm:
+    image: redis:7-alpine
+    container_name: redis-aura
+    ports: ["6379:6379"]
+    command: redis-server --bind 0.0.0.0 --maxmemory 4mb --maxmemory-policy allkeys-lru --appendonly no
+    volumes:
+      - ./data/redis-aura:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+  
+  redis-lru:
+    image: redis:7-alpine
+    container_name: redis-lru
+    ports: ["6380:6380"]
+    command: redis-server --port 6380 --bind 0.0.0.0 --maxmemory 4mb --maxmemory-policy allkeys-lru --appendonly no
+    volumes:
+      - ./data/redis-lru:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6380", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+  
+  mongo:
+    image: mongo:6
+    container_name: mongo_db
+    ports: ["27017:27017"]
+    volumes:
+      - ./data/mongodb:/data/db
+
+  executor:
+    build:
+      context: ./executor
+      dockerfile: Dockerfile.rust
+    container_name: policy-executor
+    ports:
+      - "9097:9097"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      redis-llm:
+        condition: service_healthy
+      streamer:
+        condition: service_started
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD-SHELL", "echo stat | nc localhost 2181"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka_broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      zookeeper:
+        condition: service_healthy  
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_CREATE_TOPICS: "aura-plan:1:1"  
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:29092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./kafka-init/init-topics.sh:/init-topics.sh
+    entrypoint: ["/bin/bash", "/init-topics.sh"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
+      TOPIC_NAME: "aura-plan"
+      PARTITIONS: "1"
+      REPLICATION_FACTOR: "1"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  etcd:
+    container_name: milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    volumes:
+      - ./data/etcd:/etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  minio:
+    container_name: milvus-minio
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: minio server /minio_data --console-address ":9001"
+    volumes:
+      - ./data/minio_storage:/minio_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "9000:9000"
+
+  milvus:
+    container_name: milvus_standalone
+    image: milvusdb/milvus:v2.3.21 
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+    - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      start_period: 90s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "19530:19530" 
+      - "9091:9091"
+    depends_on:
+      - "etcd"
+      - "minio"
+      - "kafka"
+      - "zookeeper"
+      
+  streamer:
+    build: .
+    container_name: streamer
+    ports:
+      - "8000:8000"
+    working_dir: /app/src
+    depends_on:
+      ollama:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      redis-llm:
+        condition: service_healthy
+      redis-lru:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+    entrypoint: sh
+    command: -c "python /app/src/stream_live.py || /bin/sh"
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+
+volumes:
+  ollama:

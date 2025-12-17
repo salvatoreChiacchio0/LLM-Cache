@@ -1,0 +1,7 @@
+redis
+requests
+pymongo
+pymilvus
+sentence-transformers
+prometheus-client
+confluent-kafka
