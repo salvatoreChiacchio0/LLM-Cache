@@ -6,6 +6,8 @@ from functools import lru_cache
 from confluent_kafka import Producer
 from pymilvus import Collection, connections, MilvusException
 from prometheus_client import start_http_server, Counter, Gauge
+from pydantic import BaseModel, Field, field_validator
+from typing import List
 
 CHARSET = "utf-8"
 LOG_FILE = "/app/data/log_15M_subset.txt"
@@ -15,7 +17,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 LLM_API_URL = "http://ollama:11434/api/generate"
-LLM_MODEL = "llama3:8b"
+LLM_MODEL = "meta-llama/llama-guard-4-12b"
 USE_GROQ = bool(GROQ_API_KEY)
 KAFKA_TOPIC = "aura-plan"
 PRIORITY_TTL_MULT = 3.0
@@ -368,19 +370,74 @@ def compute_semantic_redundancy(item_ids, k=5):
     return None
 
 
-def fix_json_common_errors(json_str):
-    import re
-    pattern = r'("(?:\w+)":)([a-zA-Z]\w*)'
-
-    def fix_match(match):
-        key_part = match.group(1)
-        value = match.group(2)
-        if value.lower() not in ['true', 'false', 'null']:
-            return key_part + '"' + value + '"'
-        return match.group(0)
-
-    json_str = re.sub(pattern, fix_match, json_str)
-    return json_str
+class CachePolicy(BaseModel):
+    """Schema per la policy di cache generata dall'LLM"""
+    global_ttl_factor: float = Field(
+        ge=GLOBAL_TTL_FACTOR_MIN,
+        le=GLOBAL_TTL_FACTOR_MAX,
+        description="Factor to multiply base TTL. Range [0.2, 3.0]"
+    )
+    evict_categories: List[str] = Field(
+        default_factory=list,
+        description="List of category names to de-prioritize (shorter TTL)"
+    )
+    priority_categories: List[str] = Field(
+        default_factory=list,
+        description="List of category names to protect (longer TTL)"
+    )
+    reasoning: str = Field(
+        description="Short explanation of the policy choice (max ~2 sentences)"
+    )
+    
+    @field_validator('evict_categories', 'priority_categories')
+    @classmethod
+    def validate_categories(cls, v):
+        """Rimuove duplicati e stringhe vuote"""
+        return list(dict.fromkeys(c.strip() for c in v if isinstance(c, str) and c.strip()))
+    
+    @classmethod
+    def get_groq_schema(cls):
+        """Genera lo schema JSON conforme ai requisiti di Groq Structured Outputs"""
+        # Genera lo schema base da Pydantic
+        schema = cls.model_json_schema()
+        
+        # Rimuovi campi non necessari per Groq
+        schema.pop("$defs", None)
+        schema.pop("title", None)
+        schema.pop("description", None)
+        
+        # Groq richiede additionalProperties: false per tutti gli oggetti
+        schema["additionalProperties"] = False
+        
+        # Assicurati che tutti i campi siano required
+        if "properties" in schema:
+            # Tutti i campi devono essere required per Groq Structured Outputs
+            schema["required"] = list(schema["properties"].keys())
+            
+            # Pulisci le proprietà per rimuovere eventuali riferimenti a $defs
+            for prop_name, prop_value in schema["properties"].items():
+                if isinstance(prop_value, dict):
+                    # Rimuovi title e description dalle proprietà (opzionale ma pulisce lo schema)
+                    prop_value.pop("title", None)
+                    prop_value.pop("description", None)
+                    # Assicurati che gli array abbiano items definito correttamente
+                    if prop_value.get("type") == "array":
+                        items = prop_value.get("items", {})
+                        if isinstance(items, dict):
+                            items.pop("title", None)
+                            items.pop("description", None)
+        
+        return schema
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "global_ttl_factor": 1.0,
+                "evict_categories": ["books"],
+                "priority_categories": ["smartphone"],
+                "reasoning": "Prioritizing high-value categories based on hit rate analysis"
+            }
+        }
 
 
 class ContextAggregator:
@@ -514,13 +571,13 @@ class ContextAggregator:
 def build_global_prompt(snapshot, cache_full, previous_policy=None):
     lines = []
     lines.append(
-        "TASK: Generate a high-level cache policy as JSON based on recent traffic and Aura cache state."
+        "TASK: Generate an AGGRESSIVE cache policy to MAXIMIZE hit ratio. Take BOLD actions based on recent traffic patterns."
     )
     lines.append("")
-    lines.append("CONTEXT:")
-    lines.append(f"- Cache usage percent: {cache_full}")
+    lines.append("CRITICAL CONTEXT:")
+    lines.append(f"- Cache usage percent: {cache_full}%")
     lines.append(f"- Events in window: {snapshot['total_events']}")
-    lines.append(f"- Aura hit ratio: {snapshot['aura_hit_ratio']:.3f}")
+    lines.append(f"- Aura hit ratio: {snapshot['aura_hit_ratio']:.3f} ({snapshot['aura_hit_ratio']*100:.1f}%)")
     
     if snapshot.get("delta") is not None:
         delta = snapshot["delta"]
@@ -528,9 +585,12 @@ def build_global_prompt(snapshot, cache_full, previous_policy=None):
         lines.append("PERFORMANCE DELTA (since last policy):")
         lines.append(f"- Hit ratio changed from {delta['hit_ratio_previous']:.3f} to {snapshot['aura_hit_ratio']:.3f} (delta: {delta['hit_ratio_change']:+.3f})")
         if delta['hit_ratio_change'] < -0.05:
-            lines.append("  WARNING: Hit ratio decreased significantly - previous policy may need adjustment")
+            lines.append("  ⚠️ CRITICAL: Hit ratio DECREASED significantly - PREVIOUS POLICY FAILED. Take IMMEDIATE corrective action!")
+            lines.append("  ACTION REQUIRED: Aggressively adjust global_ttl_factor and category priorities NOW.")
         elif delta['hit_ratio_change'] > 0.05:
-            lines.append("  NOTE: Hit ratio improved - current policy direction seems effective")
+            lines.append("  ✅ Hit ratio improved - continue this direction but be ready to optimize further")
+        elif abs(delta['hit_ratio_change']) < 0.01:
+            lines.append("  ⚠️ STAGNATION DETECTED: Hit ratio barely changed. EXPLORE DIFFERENT strategy aggressively!")
     
     if previous_policy:
         lines.append("")
@@ -577,87 +637,179 @@ def build_global_prompt(snapshot, cache_full, previous_policy=None):
         lines.append("- Semantic redundancy score: N/A (computation unavailable)")
     
     lines.append("")
-    lines.append("INSTRUCTIONS:")
-    lines.append("- Focus only on managing the Aura cache (conceptual policy, not specific item IDs).")
-    lines.append(
-        "- You MUST return a single JSON object with exactly these top-level keys: "
-        "global_ttl_factor, evict_categories, priority_categories, reasoning."
-    )
-    lines.append(
-        "- global_ttl_factor: float in range [0.2, 3.0]; values < 1.0 make TTLs shorter, values > 1.0 make TTLs longer."
-    )
-    lines.append(
-        "- evict_categories: array of unique category names (strings) to de-prioritize (shorter TTL)."
-    )
-    lines.append(
-        "- priority_categories: array of unique category names (strings) to protect (longer TTL)."
-    )
-    lines.append(
-        "- reasoning: short natural language string (max ~2 sentences) explaining the choice."
-    )
-    lines.append("- Do NOT include item IDs, user IDs, or per-item policies.")
+    lines.append("AGGRESSIVE POLICY INSTRUCTIONS:")
     lines.append("")
-    lines.append("CRITICAL: OUTPUT FORMAT REQUIREMENTS:")
-    lines.append(
-        "- You MUST output ONLY a valid JSON object. No explanations, no reasoning, no markdown, no code fences."
-    )
-    lines.append("- Your response must start with '{' and end with '}'.")
-    lines.append("- Do NOT include any text before or after the JSON object.")
-    lines.append("- Do NOT wrap the JSON in backticks, code blocks, or any other formatting.")
-    lines.append("- Use double quotes for all JSON keys and string values.")
-    lines.append("- The JSON must be syntactically valid and parseable by a standard JSON parser.")
+    lines.append("🎯 PRIMARY GOAL: MAXIMIZE hit ratio through BOLD, DECISIVE actions.")
     lines.append("")
-    lines.append("REQUIRED OUTPUT FORMAT (copy this structure exactly, adapt values to context):")
-    lines.append(
-        '{"global_ttl_factor": 1.0, "evict_categories": ["books"], "priority_categories": ["smartphone"], "reasoning": "short explanation"}'
-    )
+    lines.append("STRATEGY RULES:")
+    lines.append("1. If hit ratio is LOW (<0.5): AGGRESSIVELY increase global_ttl_factor to 2.0-3.0 to keep more items cached")
+    lines.append("2. If hit ratio is MEDIUM (0.5-0.7): Optimize category priorities - prioritize high-miss categories")
+    lines.append("3. If hit ratio is HIGH (>0.7): Fine-tune but maintain aggressive protection of successful categories")
+    lines.append("4. If cache is FULL (>80%): AGGRESSIVELY evict low-priority categories, protect high-value ones")
+    lines.append("5. If cache is EMPTY (<50%): AGGRESSIVELY extend TTLs to fill cache with valuable items")
     lines.append("")
-    lines.append("YOUR RESPONSE MUST BE ONLY THIS JSON OBJECT, NOTHING ELSE:")
+    lines.append("CATEGORY MANAGEMENT:")
+    lines.append("- Categories with HIGH miss counts: IMMEDIATELY add to priority_categories (they need longer TTL)")
+    lines.append("- Categories with LOW request counts but HIGH miss rate: AGGRESSIVELY evict (add to evict_categories)")
+    lines.append("- Top requested categories: ALWAYS protect (add to priority_categories)")
+    lines.append("")
+    lines.append("PARAMETER GUIDELINES:")
+    lines.append("- global_ttl_factor: Use EXTREME values when needed (0.2 for aggressive eviction, 3.0 for aggressive retention)")
+    lines.append("  * If hit ratio dropped: INCREASE factor aggressively (1.5-2.5)")
+    lines.append("  * If cache full and hit ratio low: DECREASE factor aggressively (0.3-0.5)")
+    lines.append("  * If hit ratio stagnant: EXPLORE opposite direction (if was high, go low; if was low, go high)")
+    lines.append("- evict_categories: Be AGGRESSIVE - list ALL underperforming categories (3-5 categories)")
+    lines.append("- priority_categories: Be SELECTIVE but BOLD - protect top 2-4 high-value categories")
+    lines.append("")
+    lines.append("EXPLORATION MANDATE:")
+    lines.append("- If hit ratio change is within ±0.01 for two consecutive windows: RADICALLY change strategy")
+    lines.append("  * If previous factor was >1.0, try <0.5")
+    lines.append("  * If previous factor was <1.0, try >2.0")
+    lines.append("  * Completely swap priority and evict categories")
+    lines.append("  * Take RISKS to find better policy")
+    lines.append("")
+    lines.append("TECHNICAL CONSTRAINTS:")
+    lines.append("- global_ttl_factor: float in range [0.2, 3.0] - USE EXTREMES when needed")
+    lines.append("- evict_categories: array of category name strings (be aggressive, 3-5 categories)")
+    lines.append("- priority_categories: array of category name strings (be selective, 2-4 categories)")
+    lines.append("- reasoning: Explain your AGGRESSIVE strategy choice (1-2 sentences)")
+    lines.append("- Do NOT include item IDs, user IDs, or per-item policies")
+    lines.append("")
+    lines.append("⚠️ REMEMBER: Being CONSERVATIVE leads to STAGNATION. Be BOLD, take RISKS, MAXIMIZE performance!")    
     return "\n".join(lines)
 
 
 def call_llm_and_send_plan(prompt):
     t0 = time.time()
-    plan = None
-    plan_valid = False
+    policy = None
+    
     try:
         if USE_GROQ:
-            print("[DEBUG] Calling Groq API...")
+            print("[DEBUG] Calling Groq API with Structured Outputs...")
             try:
+                # Ottieni lo schema JSON conforme ai requisiti Groq
+                schema = CachePolicy.get_groq_schema()
+                print(f"[DEBUG] Generated schema: {json.dumps(schema, indent=2)}")
+                
+                # Prova prima senza strict, poi con strict se necessario
+                # Prova prima con Structured Outputs
+                request_payload = {
+                    "model": GROQ_MODEL,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are an AGGRESSIVE cache policy optimizer. Your goal is to MAXIMIZE hit ratio through BOLD, DECISIVE actions. Take RISKS, use EXTREME parameter values when needed, and EXPLORE different strategies aggressively. Never be conservative - stagnation kills performance. Generate policies that push boundaries and optimize aggressively."
+                        },
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.9,
+                    "max_tokens": 1024,
+                    "response_format": {
+                        "type": "json_schema",
+                        "json_schema": {
+                            "name": "cache_policy",
+                            "schema": schema
+                        }
+                    }
+                }
+                
                 resp = requests.post(
                     GROQ_API_URL,
                     headers={
                         "Authorization": f"Bearer {GROQ_API_KEY}",
                         "Content-Type": "application/json",
                     },
-                    json={
+                    json=request_payload,
+                    timeout=30,
+                )
+                print(f"[DEBUG] Groq API response status: {resp.status_code}")
+                
+                # Se Structured Outputs fallisce, prova con JSON Object Mode
+                if resp.status_code == 400:
+                    print(f"[WARNING] Structured Outputs failed, trying JSON Object Mode...")
+                    print(f"[ERROR] Groq API error response: {resp.text[:1000]}")
+                    try:
+                        error_data = resp.json()
+                        print(f"[ERROR] Groq API error details: {json.dumps(error_data, indent=2)}")
+                    except:
+                        pass
+                    
+                    # Fallback a JSON Object Mode
+                    request_payload = {
                         "model": GROQ_MODEL,
                         "messages": [
-                            {"role": "system", "content": "You are a JSON-only response generator. You must respond with ONLY valid JSON, no explanations, no reasoning, no markdown. Your response must start with '{' and end with '}'."},
+                            {
+                                "role": "system",
+                                "content": "You are an AGGRESSIVE cache policy optimizer. MAXIMIZE hit ratio through BOLD actions. Use EXTREME values (0.2-0.5 for eviction, 2.0-3.0 for retention). You MUST respond with ONLY valid JSON: {\"global_ttl_factor\": float (0.2-3.0), \"evict_categories\": [string], \"priority_categories\": [string], \"reasoning\": string}. No explanations, no markdown, only JSON."
+                            },
                             {"role": "user", "content": prompt}
                         ],
                         "temperature": 0.7,
                         "max_tokens": 1024,
-                    },
-                    timeout=30,
-                )
-                print(f"[DEBUG] Groq API response status: {resp.status_code}")
+                        "response_format": {"type": "json_object"}
+                    }
+                    
+                    resp = requests.post(
+                        GROQ_API_URL,
+                        headers={
+                            "Authorization": f"Bearer {GROQ_API_KEY}",
+                            "Content-Type": "application/json",
+                        },
+                        json=request_payload,
+                        timeout=30,
+                    )
+                    print(f"[DEBUG] Groq API (JSON mode) response status: {resp.status_code}")
+                
+                if resp.status_code != 200:
+                    print(f"[ERROR] Groq API error response: {resp.text[:1000]}")
+                    try:
+                        error_data = resp.json()
+                        print(f"[ERROR] Groq API error details: {json.dumps(error_data, indent=2)}")
+                    except:
+                        pass
+                
                 if resp.status_code == 429:
                     raise requests.exceptions.HTTPError("Rate limit reached", response=resp)
+                
                 resp.raise_for_status()
-                plan = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                
+                # La risposta è già JSON valido e conforme allo schema
+                response_data = resp.json()
+                content = response_data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                
+                if not content:
+                    print("[ERROR] Empty response from Groq API")
+                    return None
+                
+                # Parse e validazione con Pydantic
+                policy_data = json.loads(content)
+                policy = CachePolicy.model_validate(policy_data)
+                
             except requests.exceptions.HTTPError as e:
                 if e.response and e.response.status_code == 429:
-                    print("[WARNING] Groq rate limit reached, falling back to Ollama...")
+                    print("[WARNING] Groq rate limit reached")
                     raise
                 raise
+            except json.JSONDecodeError as e:
+                print(f"[ERROR] Failed to parse JSON response: {e}")
+                if hasattr(e, 'response') and e.response is not None:
+                    print(f"[ERROR] Response body: {e.response.text[:500]}")
+                return None
+            except Exception as e:
+                print(f"[ERROR] Failed to validate policy schema: {e}")
+                import traceback
+                traceback.print_exc()
+                return None
         else:
+            # Fallback a Ollama (non supporta structured outputs, usa JSON mode)
+            print("[DEBUG] Calling Ollama API (JSON mode)...")
             resp = requests.post(
                 LLM_API_URL,
                 json={
                     "model": LLM_MODEL,
-                    "prompt": prompt,
+                    "prompt": prompt + "\n\nIMPORTANT: Respond with ONLY valid JSON matching this schema: {\"global_ttl_factor\": float, \"evict_categories\": [string], \"priority_categories\": [string], \"reasoning\": string}",
                     "stream": False,
+                    "format": "json",
                     "options": {
                         "temperature": 0.9,
                         "top_p": 0.9,
@@ -666,319 +818,114 @@ def call_llm_and_send_plan(prompt):
                 },
                 timeout=300,
             )
-            plan = resp.json().get("response", "").strip()
-        LATENCY_MS.set((time.time() - t0) * 1000)
-        print("[DEBUG] Raw LLM response from LLM (full, first 1000 chars):")
-        print(plan[:1000])
-        if len(plan) > 1000:
-            print(f"[DEBUG] ... (truncated, total length: {len(plan)} chars)")
-        if plan.startswith("```"):
-            lines = plan.split("\n")
-            if lines[0].strip().startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].strip() == "```":
-                lines = lines[:-1]
-            plan = "\n".join(lines).strip()
-        # Try to find JSON in the response - be more aggressive
-        json_start = plan.find("{")
-        if json_start == -1:
-            # Try to find JSON-like structure even if it's not at the start
-            # Look for patterns like "{" or '{' or even just look for key-value pairs
-            json_start = plan.find('"global_ttl_factor"')
-            if json_start != -1:
-                # Find the opening brace before this
-                for i in range(json_start, -1, -1):
-                    if plan[i] == "{":
-                        json_start = i
-                        break
+            content = resp.json().get("response", "").strip()
+            
+            if not content:
+                print("[ERROR] Empty response from Ollama")
+                return None
+            
+            try:
+                policy_data = json.loads(content)
+                policy = CachePolicy.model_validate(policy_data)
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"[ERROR] Failed to parse/validate Ollama response: {e}")
+                return None
         
-        if json_start != -1:
-            brace_count = 0
-            json_end = -1
-            for i in range(json_start, len(plan)):
-                if plan[i] == "{":
-                    brace_count += 1
-                elif plan[i] == "}":
-                    brace_count -= 1
-                    if brace_count == 0:
-                        json_end = i + 1
-                        break
-            if json_end != -1:
-                plan = plan[json_start:json_end]
-        else:
-            # Last resort: try to extract JSON by looking for common patterns
-            # Look for "global_ttl_factor" which should be in every valid response
-            if '"global_ttl_factor"' in plan or "'global_ttl_factor'" in plan:
-                # Try to find a JSON-like structure around this
-                idx = plan.find('"global_ttl_factor"')
-                if idx == -1:
-                    idx = plan.find("'global_ttl_factor'")
-                if idx != -1:
-                    # Look backwards for opening brace
-                    for i in range(max(0, idx - 50), idx):
-                        if plan[i] == "{":
-                            json_start = i
-                            # Look forwards for closing brace
-                            brace_count = 0
-                            for j in range(json_start, min(len(plan), json_start + 500)):
-                                if plan[j] == "{":
-                                    brace_count += 1
-                                elif plan[j] == "}":
-                                    brace_count -= 1
-                                    if brace_count == 0:
-                                        plan = plan[json_start:j+1]
-                                        break
-                            break
-        if plan and plan.startswith("{") and plan.endswith("}"):
-            plan = fix_json_common_errors(plan)
-        if plan:
-            print("[DEBUG] Candidate LLM plan after JSON extraction/fix (truncated to 500 chars):")
-            print(plan[:500])
-        if plan and plan.startswith("{") and plan.endswith("}"):
-            try:
-                json.loads(plan)
-                plan_valid = True
-            except json.JSONDecodeError as e:
-                print(
-                    f"[DEBUG] JSON malformato (dopo fix): {plan[:100]}... (errore: {e.msg} alla posizione {e.pos})"
-                )
-        if not plan_valid:
-            if not plan:
-                print("[DEBUG] LLM ha ritornato risposta vuota")
-            elif not plan.startswith("{"):
-                print(
-                    f"[DEBUG] Risposta LLM non inizia con {{: {plan[:200]}..."
-                )
-                # Try one more time to extract JSON with more aggressive methods
-                if '"global_ttl_factor"' in plan or "'global_ttl_factor'" in plan:
-                    print("[DEBUG] Tentativo di estrazione JSON da risposta malformata...")
-                    # Try regex to find JSON object (with both single and double quotes)
-                    json_match = re.search(r'\{[^{}]*["\']global_ttl_factor["\'][^{}]*\}', plan, re.DOTALL)
-                    if json_match:
-                        candidate = json_match.group(0)
-                        # Try to expand to find complete JSON
-                        start_idx = plan.find(candidate)
-                        if start_idx != -1:
-                            # Look for complete JSON structure
-                            brace_start = plan.rfind('{', 0, start_idx + 1)
-                            if brace_start != -1:
-                                brace_count = 0
-                                for i in range(brace_start, min(len(plan), brace_start + 1000)):
-                                    if plan[i] == "{":
-                                        brace_count += 1
-                                    elif plan[i] == "}":
-                                        brace_count -= 1
-                                        if brace_count == 0:
-                                            candidate = plan[brace_start:i+1]
-                                            # Replace single quotes with double quotes for JSON
-                                            candidate = candidate.replace("'", '"')
-                                            try:
-                                                json.loads(candidate)
-                                                plan = candidate
-                                                plan_valid = True
-                                                print("[DEBUG] JSON estratto con successo tramite regex avanzata")
-                                                break
-                                            except:
-                                                pass
-                    # If still not valid, try to fix common issues
-                    if not plan_valid and '"global_ttl_factor"' in plan:
-                        # Try to manually construct JSON from found values
-                        try:
-                            # Extract values using regex
-                            factor_match = re.search(r'["\']global_ttl_factor["\']\s*:\s*([0-9.]+)', plan)
-                            priority_match = re.search(r'["\']priority_categories["\']\s*:\s*\[(.*?)\]', plan, re.DOTALL)
-                            evict_match = re.search(r'["\']evict_categories["\']\s*:\s*\[(.*?)\]', plan, re.DOTALL)
-                            
-                            if factor_match:
-                                factor = float(factor_match.group(1))
-                                priority = []
-                                evict = []
-                                
-                                if priority_match:
-                                    priority_str = priority_match.group(1)
-                                    priority = [p.strip().strip('"\'') for p in re.findall(r'["\']([^"\']+)["\']', priority_str)]
-                                
-                                if evict_match:
-                                    evict_str = evict_match.group(1)
-                                    evict = [e.strip().strip('"\'') for e in re.findall(r'["\']([^"\']+)["\']', evict_str)]
-                                
-                                # Construct valid JSON
-                                plan = json.dumps({
-                                    "global_ttl_factor": factor,
-                                    "priority_categories": priority,
-                                    "evict_categories": evict,
-                                    "reasoning": "Extracted from malformed response"
-                                })
-                                plan_valid = True
-                                print("[DEBUG] JSON ricostruito manualmente da valori estratti")
-                        except Exception as e:
-                            print(f"[DEBUG] Fallito tentativo di ricostruzione JSON: {e}")
-            elif not plan.endswith("}"):
-                print(
-                    f"[DEBUG] JSON incompleto (non finisce con }}): {plan[:200]}..."
-                )
-
-        else:
-            print("[DEBUG] Final LLM plan JSON (truncated to 500 chars):")
-            print(plan)
-            policy_data = None
-            try:
-                policy_data = json.loads(plan)
-            except json.JSONDecodeError:
-                policy_data = None
-            if isinstance(policy_data, dict):
-                raw_factor = policy_data.get("global_ttl_factor", 1.0)
-                try:
-                    factor = float(raw_factor)
-                    if not (GLOBAL_TTL_FACTOR_MIN <= factor <= GLOBAL_TTL_FACTOR_MAX):
-                        print(f"[WARNING] LLM returned global_ttl_factor={factor}, clamping to [{GLOBAL_TTL_FACTOR_MIN}, {GLOBAL_TTL_FACTOR_MAX}]")
-                        factor = max(GLOBAL_TTL_FACTOR_MIN, min(factor, GLOBAL_TTL_FACTOR_MAX))
-                except (TypeError, ValueError) as e:
-                    print(f"[WARNING] Invalid global_ttl_factor from LLM: {raw_factor}, using default 1.0")
-                    factor = 1.0
-                
-                if factor < GLOBAL_TTL_FACTOR_MIN:
-                    print(f"[ERROR] Factor {factor} below minimum {GLOBAL_TTL_FACTOR_MIN}, clamping")
-                    factor = GLOBAL_TTL_FACTOR_MIN
-                elif factor > GLOBAL_TTL_FACTOR_MAX:
-                    print(f"[ERROR] Factor {factor} above maximum {GLOBAL_TTL_FACTOR_MAX}, clamping")
-                    factor = GLOBAL_TTL_FACTOR_MAX
-
-                raw_priority = policy_data.get("priority_categories", [])
-                if isinstance(raw_priority, list):
-                    priority_categories = [
-                        c.strip()
-                        for c in raw_priority
-                        if isinstance(c, str) and c.strip()
-                    ]
-                else:
-                    priority_categories = []
-
-                raw_evict = policy_data.get("evict_categories", [])
-                if isinstance(raw_evict, list):
-                    evict_categories = [
-                        c.strip()
-                        for c in raw_evict
-                        if isinstance(c, str) and c.strip()
-                    ]
-                else:
-                    evict_categories = []
-
-                reasoning = policy_data.get("reasoning", "")
-                if not isinstance(reasoning, str):
-                    reasoning = str(reasoning)
-
-                with policy_lock:
-                    old_factor = current_policy.get("global_ttl_factor", 1.0)
-                    old_priority = current_policy.get("priority_categories", [])
-                    old_evict = current_policy.get("evict_categories", [])
-                    
-                    current_policy["global_ttl_factor"] = factor
-                    current_policy["priority_categories"] = priority_categories
-                    current_policy["evict_categories"] = evict_categories
-                    current_policy["reasoning"] = reasoning
-                
-                # Applica retroattivamente la nuova policy
-                POLICY_APPLICATIONS.inc()
-                print(f"[POLICY] New policy applied: factor={factor:.2f}, priority={priority_categories}, evict={evict_categories}")
-                print(f"[POLICY] Reasoning: {reasoning}")
-                
-                # Applica retroattivamente solo se la policy è cambiata significativamente
-                policy_changed = (
-                    abs(factor - old_factor) > 0.1 or
-                    set(priority_categories) != set(old_priority) or
-                    set(evict_categories) != set(old_evict)
-                )
-                
-                if policy_changed:
-                    apply_policy_retroactively(factor, priority_categories, evict_categories, max_keys_to_scan=500)
+        LATENCY_MS.set((time.time() - t0) * 1000)
+        
+        if policy is None:
+            print("[ERROR] Policy is None after LLM call")
+            return None
+        
+        print(f"[DEBUG] Policy validated successfully: factor={policy.global_ttl_factor:.2f}, "
+              f"priority={policy.priority_categories}, evict={policy.evict_categories}")
+        
+        # Applica la policy
+        with policy_lock:
+            old_factor = current_policy.get("global_ttl_factor", 1.0)
+            old_priority = current_policy.get("priority_categories", [])
+            old_evict = current_policy.get("evict_categories", [])
+            
+            current_policy["global_ttl_factor"] = policy.global_ttl_factor
+            current_policy["priority_categories"] = policy.priority_categories
+            current_policy["evict_categories"] = policy.evict_categories
+            current_policy["reasoning"] = policy.reasoning
+        
+        POLICY_APPLICATIONS.inc()
+        print(f"[POLICY] New policy applied: factor={policy.global_ttl_factor:.2f}, "
+              f"priority={policy.priority_categories}, evict={policy.evict_categories}")
+        print(f"[POLICY] Reasoning: {policy.reasoning}")
+        
+        policy_changed = (
+            abs(policy.global_ttl_factor - old_factor) > 0.1 or
+            set(policy.priority_categories) != set(old_priority) or
+            set(policy.evict_categories) != set(old_evict)
+        )
+        
+        if policy_changed:
+            apply_policy_retroactively(
+                policy.global_ttl_factor,
+                policy.priority_categories,
+                policy.evict_categories,
+                max_keys_to_scan=500
+            )
+        
+        # Invia a Kafka
+        plan_json = policy.model_dump_json()
+        try:
+            kafka_producer.produce(
+                topic=KAFKA_TOPIC,
+                value=plan_json.encode("utf-8"),
+                callback=delivery_report,
+            )
+            kafka_producer.poll(0)
+            remaining = kafka_producer.flush(timeout=5)
+            if remaining > 0:
+                print(f"[WARNING] {remaining} messages still in queue after flush")
+        except BufferError as e:
+            kafka_producer.poll(10)
             try:
                 kafka_producer.produce(
                     topic=KAFKA_TOPIC,
-                    value=plan.encode("utf-8"),
+                    value=plan_json.encode("utf-8"),
                     callback=delivery_report,
                 )
                 kafka_producer.poll(0)
-                remaining = kafka_producer.flush(timeout=5)
-                if remaining > 0:
-                    print(f"[WARNING] {remaining} messages still in Kafka buffer after flush")
-                print(f"[DEBUG] Piano inviato a Kafka: {plan[:100]}...")
-            except BufferError as e:
-                print(f"[ERROR] Kafka producer buffer full, waiting and retrying: {e}")
-                kafka_producer.poll(10)
+                kafka_producer.flush(timeout=5)
+            except Exception as e2:
+                print(f"[ERROR] Kafka retry failed: {e2}")
+        except Exception as e:
+            error_str = str(e).lower()
+            if "unknown topic" in error_str or "not available" in error_str:
+                time.sleep(1)
                 try:
                     kafka_producer.produce(
                         topic=KAFKA_TOPIC,
-                        value=plan.encode("utf-8"),
+                        value=plan_json.encode("utf-8"),
                         callback=delivery_report,
                     )
                     kafka_producer.poll(0)
                     kafka_producer.flush(timeout=5)
-                    print("[DEBUG] Piano inviato a Kafka (retry after buffer flush)")
                 except Exception as e2:
-                    print(f"[ERROR] Kafka retry failed: {e2}")
-            except Exception as e:
-                error_str = str(e).lower()
-                if "unknown topic" in error_str or "not available" in error_str:
-                    time.sleep(1)
-                    try:
-                        kafka_producer.produce(
-                            topic=KAFKA_TOPIC,
-                            value=plan.encode("utf-8"),
-                            callback=delivery_report,
-                        )
-                        kafka_producer.poll(0)
-                        kafka_producer.flush(timeout=5)
-                        print("[DEBUG] Piano inviato a Kafka (retry)")
-                    except Exception as e2:
-                        print(f"[ERROR] Kafka (retry): Impossibile inviare il piano: {e2}")
-                else:
-                    print(f"[ERROR] Kafka: Impossibile inviare il piano: {e}")
-    except requests.exceptions.RequestException as e:
-        print(f"[ERROR] Groq API request failed: {e}")
-        if hasattr(e, 'response') and e.response is not None:
-            print(f"[ERROR] Response status: {e.response.status_code}")
-            print(f"[ERROR] Response body: {e.response.text[:200]}")
-            if e.response.status_code == 429:
-                print("[WARNING] Rate limit reached for Groq, falling back to Ollama...")
-                try:
-                    resp = requests.post(
-                        LLM_API_URL,
-                        json={
-                            "model": LLM_MODEL,
-                            "prompt": prompt,
-                            "stream": False,
-                            "options": {
-                                "temperature": 0.7,
-                                "top_p": 0.9,
-                                "num_predict": 512,
-                            },
-                        },
-                        timeout=300,
-                    )
-                    plan = resp.json().get("response", "").strip()
-                    if plan:
-                        plan_valid = True
-                        print("[DEBUG] Successfully used Ollama as fallback")
-                except Exception as e2:
-                    print(f"[ERROR] Ollama fallback also failed: {e2}")
+                    print(f"[ERROR] Kafka retry after sleep failed: {e2}")
+            else:
+                print(f"[ERROR] Kafka: Impossibile inviare il piano: {e}")
+        
+        return plan_json
+    
     except Exception as e:
         print(f"[ERROR] Unexpected error in LLM call: {e}")
         import traceback
         traceback.print_exc()
-    return plan if plan_valid else None
+        return None
 
 def apply_policy_retroactively(factor, priority_cats, evict_cats, max_keys_to_scan=1000):
-    """
-    Applica retroattivamente una policy agli elementi già in cache.
-    Scansiona le chiavi Redis e applica evictions/estensioni TTL basate sulla policy.
-    """
+
     evicted_count = 0
     extended_count = 0
     updated_count = 0
     
     try:
-        # Usa SCAN invece di KEYS per evitare di bloccare Redis
         cursor = 0
         keys_scanned = 0
         
@@ -996,7 +943,6 @@ def apply_policy_retroactively(factor, priority_cats, evict_cats, max_keys_to_sc
                 keys_to_check.append(key)
                 keys_scanned += 1
             
-            # Ottieni TTL per tutte le chiavi in batch
             for key in keys_to_check:
                 pipe.ttl(key)
             
@@ -1007,22 +953,18 @@ def apply_policy_retroactively(factor, priority_cats, evict_cats, max_keys_to_sc
                     continue
                     
                 ttl = ttls[i]
-                if ttl <= 0:  # Chiave non esiste o senza TTL
+                if ttl <= 0:  
                     continue
                 
-                # Estrai item_id dalla chiave
                 try:
                     item_id_str = key.decode('utf-8').replace('item:', '')
                     item_id = int(item_id_str)
                 except (ValueError, AttributeError):
                     continue
                 
-                # Ottieni categoria (usa cache per performance)
                 category = get_item_category_cached(item_id)
                 
-                # Applica policy
                 if isinstance(category, str) and category in evict_cats:
-                    # Evict: elimina la chiave
                     try:
                         r.delete(key)
                         evicted_count += 1
@@ -1031,7 +973,6 @@ def apply_policy_retroactively(factor, priority_cats, evict_cats, max_keys_to_sc
                         print(f"[WARNING] Failed to evict {key}: {e}")
                 
                 elif isinstance(category, str) and category in priority_cats:
-                    # Priority: estendi TTL
                     try:
                         new_ttl = int(ttl * PRIORITY_TTL_MULT)
                         new_ttl = max(TTL_MIN_SECONDS, min(new_ttl, TTL_MAX_SECONDS))
@@ -1041,7 +982,8 @@ def apply_policy_retroactively(factor, priority_cats, evict_cats, max_keys_to_sc
                         extended_count += 1
                         RETROACTIVE_EXTENSIONS.inc()
                     except Exception as e:
-                        print(f"[WARNING] Failed to extend TTL for {key}: {e}")
+                        print(e)
+                       
                 
                 elif factor != 1.0:
                     # Applica global_ttl_factor
@@ -1062,9 +1004,8 @@ def apply_policy_retroactively(factor, priority_cats, evict_cats, max_keys_to_sc
         print(f"[POLICY] Retroactive application: evicted={evicted_count}, extended={extended_count}, updated={updated_count}, scanned={keys_scanned}")
         
     except Exception as e:
-        print(f"[ERROR] Failed to apply policy retroactively: {e}")
-        import traceback
-        traceback.print_exc()
+        print("Policy retroattiva non applicata")
+       
     
     return evicted_count, extended_count, updated_count
 
@@ -1074,7 +1015,6 @@ def delivery_report(err, msg):
     if err is not None:
         kafka_delivery_failures += 1
         print(f'[ERROR] Errore nella consegna del messaggio a Kafka: {err}')
-        print(f'[ERROR] Total Kafka delivery failures: {kafka_delivery_failures}')
     else:
         kafka_delivery_successes += 1
         if kafka_delivery_successes % 10 == 0:
@@ -1105,10 +1045,8 @@ def llm_worker_thread():
 llm_worker = Thread(target=llm_worker_thread, daemon=True)
 llm_worker.start()
 print("[DEBUG] LLM worker thread started in background")
-
-print("[DEBUG] Initializing context aggregator...")
 aggregator = ContextAggregator(max_events=1000, session_history_len=10, window_seconds=300)
-PLAN_EVERY_N_EVENTS = 1500
+PLAN_EVERY_N_EVENTS = 1000
 events_since_last_plan = 0
 count = 0
 start_t = time.time()
@@ -1139,9 +1077,6 @@ with open(LOG_FILE, "r", encoding=FILE_ENCODING, errors="ignore") as f:
 
         item_key = f"item:{item_id}"
 
-        if action != "click":
-            continue
-
         time.sleep(0.01)
         lru_cache_full = get_lru_cache_full_percent()
 
@@ -1171,18 +1106,16 @@ with open(LOG_FILE, "r", encoding=FILE_ENCODING, errors="ignore") as f:
             CACHE_MISSES.inc()
             cache_full_item = get_aura_cache_full_percent()
             
-            # Per Aura, usiamo una logica TTL leggermente diversa da LRU per testare meglio le policy
             neighbor_ttl = estimate_ttl_from_neighbors(item_id, k=5)
             if neighbor_ttl is not None and neighbor_ttl > 0:
                 base_ttl = neighbor_ttl
             else:
-                # TTL base per Aura: leggermente più conservativi per differenziare da LRU
                 if cache_full_item < 50:
-                    base_ttl = 2000  # Più lungo di LRU (1800) per testare policy
+                    base_ttl = 2000 
                 elif cache_full_item < 80:
-                    base_ttl = 1000  # Più lungo di LRU (900)
+                    base_ttl = 1000
                 else:
-                    base_ttl = 400   # Più lungo di LRU (300)
+                    base_ttl = 400  
             
             with policy_lock:
                 factor = current_policy.get("global_ttl_factor", 1.0)

@@ -5,3 +5,4 @@ pymilvus
 sentence-transformers
 prometheus-client
 confluent-kafka
+pydantic
