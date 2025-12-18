@@ -27,5 +27,4 @@ logs/
 Thumbs.db
 
 .docker/
-
-
+.env

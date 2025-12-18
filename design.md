@@ -1,19 +1,20 @@
 # LLM-Driven Cache Policy Engine
 
-This document describes the **current implemented prototype** that dynamically manages a NoSQL cache (Redis) using a Large Language Model (LLM) as a policy engine, and compares it against an LRU-like baseline.
+This document describes the **current implemented prototype** that dynamically manages a NoSQL cache (Redis) using a Large Language Model (LLM) as a meta-policy engine, and compares it against an LRU-like baseline.
 
 ## 1. Core Principles
 
-- The system tests the hypothesis that an LLM can perform **context-aware cache decisions** (TTL selection, prefetch, eviction proposals) that outperform a static TTL/LRU policy.
-- In the current implementation the LLM reasons over a **compact context**:
-  - current item id,
-  - current user id,
-  - a small set of semantically similar items,
-  - a coarse measure of cache pressure (percentage of used memory).
+- The system tests the hypothesis that an LLM can perform **context-aware, batch-level cache decisions** (prefetch and eviction proposals) that outperform a static TTL/LRU policy when given a rich but compact summary of recent traffic and cache state.
+- The LLM is treated as a **slow, global planner** (meta-policy) that operates on windows of events, while per-request latency is governed by a simple, deterministic policy.
+- In the current implementation the LLM reasons over an **aggregated context**:
+  - recent request counts per item and per category,
+  - a small set of sample user sessions (last events per user),
+  - a coarse measure of Aura cache pressure (percentage of used memory),
+  - item metadata (title, category, brand) for the most requested items in the window.
 - The system enforces **separation of concerns**:
-  - Python (`stream_live.py`) handles log replay, cache probing, feature construction and LLM calls,
-  - a Rust **Executor** applies LLM-generated plans to Redis via Kafka, decoupling slow reasoning from fast execution.
-- A **baseline Redis instance** using a simple dynamic TTL rule (LRU-style) runs in parallel for comparison.
+  - Python (`stream_live.py`) handles log replay, cache probing, feature aggregation and LLM calls,
+  - a Rust **Executor** applies LLM-generated plans (evict/prefetch) to the Aura Redis cache via Kafka, decoupling slow reasoning from fast execution.
+- A **baseline Redis instance** using a simple dynamic TTL rule (LRU-style) runs in parallel for comparison and is never controlled by the LLM.
 
 ## 2. Architecture Overview (As Implemented)
 
@@ -22,7 +23,7 @@ The prototype is organized into three layers: Data Access & Evaluation, Reasonin
 | Layer | Components | Role |
 | :--- | :--- | :--- |
 | **Data Access & Evaluation** | `stream_live.py`, `redis-aura`, `redis-lru`, MongoDB, Milvus ANN | Replays user requests from logs, performs cache lookups, gathers context and metrics, and maintains an LRU-style baseline. |
-| **Reasoning** | LLM (`llama3.2:1b` via Ollama) | Receives a compact context and returns a structured JSON cache management plan. |
+| **Reasoning** | LLM (`llama3.2:1b` via Ollama) | Periodically receives an aggregated context window and returns a structured JSON cache management plan for Aura. |
 | **Execution** | Kafka topic `aura-plan`, Rust `executor` service, `redis-aura` | Consumes the LLM plan and applies evictions and prefetches atomically to Redis. |
 
 Prometheus is used throughout to export metrics such as cache hit/miss counts, LLM latency and executor behaviour.
@@ -46,11 +47,11 @@ Prometheus is used throughout to export metrics such as cache hit/miss counts, L
    - **Metrics:** Prometheus counters track hits and misses for the baseline.
 
 3. **LLM-Driven Cache (`redis-aura`):**
-   - **Function:** Stores the same keys as the baseline but with TTLs chosen by the LLM.
-   - **Behaviour:**
+   - **Function:** Stores the same keys as the baseline, but its content is periodically optimized by LLM-generated plans (evict/prefetch).
+   - **Per-request behaviour:**
      - On hit: only metrics are updated.
-     - On miss: triggers context construction, an LLM call and a potential plan sent to Kafka. The item is always inserted into `redis-aura` with a TTL chosen by the LLM (or a conservative default if the plan is invalid).
-   - **Metrics:** Prometheus counters track hits, misses and the per-miss LLM latency.
+     - On miss: the item is inserted into `redis-aura` with a **simple dynamic TTL** based only on Aura memory usage (long TTL when cache is empty, shorter when full). No LLM call is made on the critical path.
+   - **Metrics:** Prometheus counters track hits, misses and the LLM reasoning latency associated with batch plans.
 
 4. **MongoDB (catalog):**
    - **Function:** Provides the canonical catalog for items (including metadata such as title, category and brand).
@@ -58,38 +59,50 @@ Prometheus is used throughout to export metrics such as cache hit/miss counts, L
 
 5. **Semantic Finder (Milvus ANN):**
    - **Function:** Performs Approximate Nearest Neighbor search over product embeddings.
-   - **Current use:** For each requested item, Milvus returns a small set of similar item ids. A subset of these ids is exposed to the LLM as candidates for potential prefetch.
+   - **Current use:** The standalone Milvus catalog is kept available for future extensions (e.g. semantic prefetching), but the current batch meta-policy does not query Milvus on the critical path.
 
 ### 3.2 Reasoning Layer (LLM Policy Engine)
 
-1. **Context Aggregation (as implemented in `stream_live.py`):**
-   - On a cache miss in `redis-aura`, the system builds a **minimal context bundle** consisting of:
-     - the current `item_id`,
-     - the current `user` id,
-     - up to three **similar item ids** from Milvus,
-     - the current cache usage of `redis-aura` as a percentage of an assumed capacity.
-   - No explicit user history sequence or full item metadata are included yet; they are planned as future extensions.
+1. **Context Aggregation (`ContextAggregator` in `stream_live.py`):**
+   - As the log is replayed, every relevant event updates an in-memory aggregator which tracks:
+     - per-item request counts within the current window,
+     - per-category request counts,
+     - a per-user sliding window of recent events (sample user sessions),
+     - Aura hit/miss counts to compute the Aura hit ratio.
+   - When a batch boundary is reached (e.g. every N events), the aggregator builds a **snapshot** that includes:
+     - total events in the window,
+     - Aura hit ratio,
+     - a list of the top-K items with attached catalog metadata (title, category, brand) loaded from MongoDB,
+     - a list of top categories by request count,
+     - a small set of example user sessions (compacted as sequences of `action:item_id`).
 
 2. **LLM Reasoner (Ollama `llama3.2:1b`):**
-   - **Invocation:** `stream_live.py` sends a prompt to a local Ollama instance exposing the small `llama3.2:1b` model.
+   - **Invocation:** At batch time, `stream_live.py` sends a prompt to a local Ollama instance exposing the small `llama3.2:1b` model.
    - **Prompt structure:**
-     - describes the current item, user and similar items,
-     - includes the current cache pressure (`cache_full%`),
-     - encodes simple guidelines for how TTL should depend on cache usage and similarity,
+     - describes Aura cache pressure in percentage,
+     - lists the top requested items with their title, category and brand,
+     - lists the top categories,
+     - shows a few recent user sessions in compact form,
+     - encodes high-level guidelines:
+       - favor prefetch when Aura is not full,
+       - favor evict when Aura is under pressure,
+       - only touch Aura keys (those starting with `item:`),
+       - cap the number of actions and constrain TTLs to a safe range.
      - specifies a **strict required output format**: a single JSON object with fields:
-       - `current_item_ttl`: TTL in seconds for the current item,
-       - `evict`: array of cache keys to delete,
+       - `evict`: array of cache keys to delete (e.g. `["item:123", "item:456"]`),
        - `prefetch`: array of objects `{ "k": "...", "v": "...", "ttl": ... }`.
    - **Output handling:**
      - Markdown code fences and extra text are stripped.
      - The first complete JSON object is extracted.
      - A light post-processing step corrects some common JSON formatting issues.
-     - The JSON is validated; if invalid, the system logs debug information and falls back to a default TTL.
+     - The JSON is validated; if invalid, the system logs debug information and discards the plan.
 
-3. **TTL Application (current item):**
-   - If the plan is valid and contains `current_item_ttl`, that value (bounded to positive integers) is used as TTL when inserting the current item into `redis-aura`.
-   - If the plan is missing or malformed, a conservative default TTL (e.g. 360 seconds) is used.
-   - The **evict** and **prefetch** fields of the plan are not executed in the Python process; they are forwarded unchanged to Kafka for the Executor.
+3. **Aura TTL Policy (per-request, non-LLM):**
+   - Independently from the LLM, every Aura miss is handled with a deterministic TTL policy:
+     - Aura cache \< 50%: long TTL (e.g. 1800s),
+     - 50–80%: medium TTL (e.g. 900s),
+     - \> 80%: short TTL (e.g. 300s).
+   - This guarantees predictable per-request latency and a reasonable baseline behaviour even if the LLM is slow or unavailable.
 
 ### 3.3 Execution Layer (Rust Policy Agent)
 
@@ -103,8 +116,9 @@ Prometheus is used throughout to export metrics such as cache hit/miss counts, L
    - **Plan handling:**
      - parses each Kafka message as JSON,
      - builds a Redis pipeline:
-       - for each key in `evict`: issues `DEL`,
-       - for each object in `prefetch`: issues `SETEX`/`SET` with TTL using the provided key, value and TTL (defaulting when missing),
+       - for each key in `evict` (capped to a maximum of 20 entries): issues `DEL` on Aura keys (`item:*`) only,
+       - for each object in `prefetch` (capped to a maximum of 20 entries): issues `SETEX`/`SET` with TTL using the provided key, value and TTL,
+         but with the TTL clamped into a safe range (e.g. 60–3600 seconds),
      - executes the pipeline atomically against Redis,
      - commits the Kafka offset on success.
 
@@ -119,9 +133,13 @@ Prometheus is used throughout to export metrics such as cache hit/miss counts, L
 
 ## 4. Current Limitations and Next Steps
 
-- The context seen by the LLM is intentionally **minimal** (no explicit session history, no rich item metadata, no explicit cache content snapshot) to keep latency and token usage low.
-- At this stage, the LLM primarily acts as a **TTL tuner and plan generator** rather than a full semantic policy over complex sequences.
+- The context seen by the LLM is **aggregated**, but still limited:
+  - no explicit long-term user profiles (only short recent sessions),
+  - no direct snapshot of individual keys in Aura (only counts and metadata for top items),
+  - no explicit use of semantic neighbours from Milvus in the batch prompt yet.
+- At this stage, the LLM primarily acts as a **batch planner for evict/prefetch** rather than a full semantic policy over long user journeys.
 - Future iterations will experiment with:
-  - adding richer but still compact features (user segments, item categories, cache composition summaries),
-  - reducing the frequency of LLM calls (batching or triggering only on specific patterns),
-  - comparing this LLM‑driven policy against classical ML models on the same log replay pipeline.
+  - injecting semantic neighbours from Milvus for the hottest items in each window (to enable semantic prefetching),
+  - triggering LLM plans based on adaptive conditions (e.g. drops in Aura hit ratio or spikes in cache pressure) instead of a fixed number of events,
+  - comparing this LLM‑driven meta-policy against classical ML models on the same log replay pipeline,
+  - exploring larger or more specialized LLMs (or distilled variants) to improve plan quality while keeping batch latency under control.

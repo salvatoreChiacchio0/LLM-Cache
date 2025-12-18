@@ -18,7 +18,7 @@ services:
     image: redis:7-alpine
     container_name: redis-aura
     ports: ["6379:6379"]
-    command: redis-server --bind 0.0.0.0 --maxmemory 4mb --maxmemory-policy allkeys-lru --appendonly no
+    command: redis-server --bind 0.0.0.0 --maxmemory 10mb --maxmemory-policy allkeys-lru --appendonly no
     volumes:
       - ./data/redis-aura:/data
     healthcheck:
@@ -31,7 +31,7 @@ services:
     image: redis:7-alpine
     container_name: redis-lru
     ports: ["6380:6380"]
-    command: redis-server --port 6380 --bind 0.0.0.0 --maxmemory 4mb --maxmemory-policy allkeys-lru --appendonly no
+    command: redis-server --port 6380 --bind 0.0.0.0 --maxmemory 10mb --maxmemory-policy allkeys-lru --appendonly no
     volumes:
       - ./data/redis-lru:/data
     healthcheck:
@@ -208,6 +208,25 @@ services:
     volumes:
       - ./data:/app/data
       - ./src:/app/src
+    environment:
+      - AURA_TTL_TIME_COMPRESSION=60
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GROQ_MODEL=${GROQ_MODEL:-qwen/qwen3-32b}
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=salvatore
+      - GF_SECURITY_ADMIN_PASSWORD=labthesis
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
 
 volumes:
   ollama:
+  grafana-storage:
