@@ -1,0 +1,27 @@
+from prometheus_client import start_http_server, Counter, Gauge, Histogram
+
+CACHE_MISSES = Counter("cache_misses", "Cache Misses Count (Aura - TinyLFU+LLM)")
+CACHE_HITS = Counter("cache_hits", "Cache Hits Count (Aura - TinyLFU+LLM)")
+TINYLFU_HITS = Counter("tinylfu_hits", "Cache Hits Count (TinyLFU Baseline)")
+TINYLFU_MISSES = Counter("tinylfu_misses", "Cache Misses Count (TinyLFU Baseline)")
+LATENCY_MS = Gauge("llm_reasoning_latency_ms", "LLM Response Latency in milliseconds")
+RETROACTIVE_EVICTIONS = Counter("retroactive_evictions_total", "Items evicted retroactively by policy")
+POLICY_APPLICATIONS = Counter("policy_applications_total", "Total policy applications")
+TINYLFU_ADMISSIONS = Counter("tinylfu_admissions_total", "Items admitted by TinyLFU")
+TINYLFU_REJECTIONS = Counter("tinylfu_rejections_total", "Items rejected by TinyLFU admission filter")
+TINYLFU_RESETS = Counter("tinylfu_resets_total", "TinyLFU frequency data resets")
+TINYLFU_SKETCH_ESTIMATE = Gauge("tinylfu_sketch_estimate", "Current TinyLFU sketch frequency estimate")
+TINYLFU_BIAS_ADMISSIONS = Counter("tinylfu_bias_admissions_total", "Items admitted due to doorkeeper bias")
+TINYLFU_DECAY_APPLICATIONS = Counter("tinylfu_decay_applications_total", "Number of times decay_factor was applied")
+TINYLFU_RESET_INTERVAL_UPDATES = Counter("tinylfu_reset_interval_updates_total", "Number of times reset_interval was updated")
+PROCESSING_TIME_PER_EVENT = Histogram("processing_time_seconds", "Time spent processing a single event")
+REDIS_MEMORY_USAGE = Gauge("redis_memory_usage_bytes", "Current Redis memory usage")
+LLM_ERROR_RATE = Counter("llm_errors_total", "Total number of LLM API failures")
+SAFETY_GUARD_REJECTED_PLANS = Counter("safety_guard_rejected_plans_total", "Total plans rejected by safety guard")
+SAFETY_GUARD_ROLLBACKS = Counter("safety_guard_rollbacks_total", "Total rollbacks triggered by safety guard")
+SAFETY_GUARD_ROLLBACK_REASON = Gauge("safety_guard_rollback_reason", "Reason code for last rollback (0=none, 1=hit_ratio_decrease)")
+
+def start_metrics_server(port=8000):
+    print(f"[DEBUG] Starting Prometheus metrics server on port {port}...")
+    start_http_server(port)
+    print(f"[DEBUG] Prometheus metrics server started on port {port}")

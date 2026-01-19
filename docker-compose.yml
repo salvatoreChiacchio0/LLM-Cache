@@ -1,24 +1,11 @@
-version: '3.9'
+
 
 services:
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama:/root/.ollama
-    mem_limit: 6g
-    cpus: 2
-    environment:
-      - OLLAMA_MAX_LOADED_MODELS=1
-      - OLLAMA_NUM_PARALLEL=1
-      - OLLAMA_KEEP_ALIVE=10m
-
   redis-llm:
     image: redis:7-alpine
     container_name: redis-aura
     ports: ["6379:6379"]
-    command: redis-server --bind 0.0.0.0 --maxmemory 10mb --maxmemory-policy allkeys-lru --appendonly no
+    command: redis-server --bind 0.0.0.0 --maxmemory 1200kb --maxmemory-policy noeviction --appendonly no
     volumes:
       - ./data/redis-aura:/data
     healthcheck:
@@ -31,7 +18,7 @@ services:
     image: redis:7-alpine
     container_name: redis-lru
     ports: ["6380:6380"]
-    command: redis-server --port 6380 --bind 0.0.0.0 --maxmemory 10mb --maxmemory-policy allkeys-lru --appendonly no
+    command: redis-server --port 6380 --bind 0.0.0.0 --maxmemory 1200kb --maxmemory-policy noeviction --appendonly no
     volumes:
       - ./data/redis-lru:/data
     healthcheck:
@@ -47,22 +34,23 @@ services:
     volumes:
       - ./data/mongodb:/data/db
 
-  executor:
-    build:
-      context: ./executor
-      dockerfile: Dockerfile.rust
-    container_name: policy-executor
-    ports:
-      - "9097:9097"
-    depends_on:
-      kafka:
-        condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
-      redis-llm:
-        condition: service_healthy
-      streamer:
-        condition: service_started
+  # executor:
+  #   build:
+  #     context: ./executor
+  #     dockerfile: Dockerfile.rust
+  #   container_name: policy-executor
+  #   ports:
+  #     - "9097:9097"
+  #   depends_on:
+  #     kafka:
+  #       condition: service_healthy
+  #     kafka-init:
+  #       condition: service_completed_successfully
+  #     redis-llm:
+  #       condition: service_healthy
+  #     streamer:
+  #       condition: service_started
+  # NOTE: Executor Rust is disabled - all functionality moved to Python streamer.py policy_listener
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -95,13 +83,12 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      KAFKA_CREATE_TOPICS: "aura-plan:1:1"  
     healthcheck:
       test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:29092"]
       interval: 10s
-      timeout: 5s
+      timeout: 15s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
   kafka-init:
     image: confluentinc/cp-kafka:7.4.0
@@ -114,9 +101,7 @@ services:
     entrypoint: ["/bin/bash", "/init-topics.sh"]
     environment:
       KAFKA_BOOTSTRAP_SERVER: "kafka:29092"
-      TOPIC_NAME: "aura-plan"
-      PARTITIONS: "1"
-      REPLICATION_FACTOR: "1"
+      TOPICS_TO_CREATE: "aura-plan:1:1,aura-stats:1:1"
 
   prometheus:
     image: prom/prometheus
@@ -179,7 +164,6 @@ services:
     depends_on:
       - "etcd"
       - "minio"
-      - "kafka"
       - "zookeeper"
       
   streamer:
@@ -187,10 +171,8 @@ services:
     container_name: streamer
     ports:
       - "8000:8000"
-    working_dir: /app/src
+    working_dir: /app
     depends_on:
-      ollama:
-        condition: service_started
       kafka:
         condition: service_healthy
       kafka-init:
@@ -202,16 +184,44 @@ services:
       milvus:
         condition: service_healthy
     entrypoint: sh
-    command: -c "python /app/src/stream_live.py || /bin/sh"
+    command: -c "python -m src.services.streamer || /bin/sh"
     stdin_open: true
     tty: true
     volumes:
       - ./data:/app/data
       - ./src:/app/src
+    env_file:
+      - .env
     environment:
+      - USE_GROQ=false
       - AURA_TTL_TIME_COMPRESSION=60
-      - GROQ_API_KEY=${GROQ_API_KEY:-}
-      - GROQ_MODEL=${GROQ_MODEL:-qwen/qwen3-32b}
+      - OLLAMA_HOST=${OLLAMA_HOST:-host.docker.internal}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma2:2b}
+      - FLUSH_ON_STARTUP=true
+
+  aura-brain:
+    build: .
+    container_name: aura-brain
+    working_dir: /app
+    depends_on:
+      kafka:
+        condition: service_healthy
+      streamer:
+        condition: service_started
+    entrypoint: sh
+    command: -c "python -m src.services.brain || /bin/sh"
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    env_file:
+      - .env
+    environment:
+      - USE_GROQ=false
+      - OLLAMA_HOST=${OLLAMA_HOST:-host.docker.internal}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma2:2b}
+      - FLUSH_ON_STARTUP=true
 
   grafana:
     image: grafana/grafana:latest
