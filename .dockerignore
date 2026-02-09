@@ -1,0 +1,81 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+
+# Data files (non necessari nel container - escludi tutto tranne test_data)
+data/*
+!data/test_data/
+!data/test_data/**/*.json
+!data/test_data/**/*.csv
+
+# Escludi file di dati grandi specifici
+data/tianchi_2014002_rec_tmall_log_parta.txt
+data/log_15M_subset.txt
+data/rec_tmall_product.txt
+data/tianchi_last_1M.txt
+data/UserBehavior.csv
+data/tianchi_index.json
+data/scenarios_found.json
+
+# Escludi directory di runtime (vengono montate come volumi)
+data/redis-aura/
+data/redis-lru/
+data/mongodb/
+data/etcd/
+data/minio_storage/
+data/test_results/
+data/scenarios/raw/
+
+# Analysis e output
+analysis/plots_*/
+analysis/data_*/
+analysis/*.png
+analysis/*.jsonl
+
+# Executor Rust (non necessario per Python)
+executor/target/
+executor/Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+
+# Logs
+*.log
+nohup.out
+
+# Temporary files
+*.tmp
+*.bak
+*.cache

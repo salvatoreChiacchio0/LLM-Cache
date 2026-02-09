@@ -16,12 +16,10 @@ TINYLFU_DECAY_APPLICATIONS = Counter("tinylfu_decay_applications_total", "Number
 TINYLFU_RESET_INTERVAL_UPDATES = Counter("tinylfu_reset_interval_updates_total", "Number of times reset_interval was updated")
 PROCESSING_TIME_PER_EVENT = Histogram("processing_time_seconds", "Time spent processing a single event")
 REDIS_MEMORY_USAGE = Gauge("redis_memory_usage_bytes", "Current Redis memory usage")
+LLM_CALLS = Counter("llm_calls_total", "Total number of LLM calls")
 LLM_ERROR_RATE = Counter("llm_errors_total", "Total number of LLM API failures")
-SAFETY_GUARD_REJECTED_PLANS = Counter("safety_guard_rejected_plans_total", "Total plans rejected by safety guard")
-SAFETY_GUARD_ROLLBACKS = Counter("safety_guard_rollbacks_total", "Total rollbacks triggered by safety guard")
-SAFETY_GUARD_ROLLBACK_REASON = Gauge("safety_guard_rollback_reason", "Reason code for last rollback (0=none, 1=hit_ratio_decrease)")
 
 def start_metrics_server(port=8000):
-    print(f"[DEBUG] Starting Prometheus metrics server on port {port}...")
+    print(f"Starting Prometheus metrics server on port {port}...")
     start_http_server(port)
-    print(f"[DEBUG] Prometheus metrics server started on port {port}")
+    print(f"Prometheus metrics server started on port {port}")

@@ -2,7 +2,7 @@ import threading
 from typing import Optional, Dict, Any, Tuple
 from collections import deque
 
-DECAY_FACTOR_MIN = 0.8
+DECAY_FACTOR_MIN = 0.75  # Minimum as per literature requirement
 DECAY_FACTOR_MAX = 1.0
 RESET_INTERVAL_MIN = 10000
 RESET_INTERVAL_MAX = 200000
@@ -43,7 +43,6 @@ class OptimizationSafetyGuard:
 
             decay_factor = tinylfu_control.get("decay_factor")
             reset_interval = tinylfu_control.get("reset_interval")
-            doorkeeper_bias = tinylfu_control.get("doorkeeper_bias")
 
             is_aggressive_state = adaptation_state and adaptation_state.value in ["STABLE_BUT_INEFFECTIVE", "UNSTABLE"]
 
@@ -59,11 +58,6 @@ class OptimizationSafetyGuard:
                         return False, None, f"reset_interval {reset_interval} out of bounds [{RESET_INTERVAL_MIN}, {RESET_INTERVAL_MAX}]", False
                     validated_control["reset_interval"] = reset_interval
 
-                if doorkeeper_bias is not None:
-                    if not isinstance(doorkeeper_bias, dict):
-                        return False, None, f"doorkeeper_bias must be a dict, got {type(doorkeeper_bias)}", False
-                    validated_control["doorkeeper_bias"] = doorkeeper_bias
-
                 validated_plan = plan.copy()
                 validated_plan["tinylfu_control"] = validated_control
                 reason = "Validation passed (decay_factor change - safety guard bypassed)"
@@ -71,7 +65,7 @@ class OptimizationSafetyGuard:
                     reason += f" - Aggressive state ({adaptation_state.value}) allows multiple parameters"
                 return True, validated_plan, reason, False
 
-            param_count = sum(1 for p in [decay_factor, reset_interval, doorkeeper_bias] if p is not None)
+            param_count = sum(1 for p in [decay_factor, reset_interval] if p is not None)
 
             if param_count > 1:
                 if is_aggressive_state:
@@ -97,11 +91,6 @@ class OptimizationSafetyGuard:
                     was_clamped = True
 
                 validated_control["reset_interval"] = reset_interval
-
-            if doorkeeper_bias is not None:
-                if not isinstance(doorkeeper_bias, dict):
-                    return False, None, f"doorkeeper_bias must be a dict, got {type(doorkeeper_bias)}", False
-                validated_control["doorkeeper_bias"] = doorkeeper_bias
 
             validated_plan = plan.copy()
             validated_plan["tinylfu_control"] = validated_control
@@ -149,6 +138,7 @@ class OptimizationSafetyGuard:
         doorkeeper_bias: Optional[Dict[str, Any]],
         snapshot_time: Optional[float] = None
     ):
+        # doorkeeper_bias parameter kept for backward compatibility but not used
         with self.lock:
             if self.in_rollback_state:
                 return
@@ -156,7 +146,6 @@ class OptimizationSafetyGuard:
             self.last_stable_config = {
                 "decay_factor": decay_factor,
                 "reset_interval": reset_interval,
-                "doorkeeper_bias": doorkeeper_bias.copy() if doorkeeper_bias else None,
                 "timestamp": snapshot_time
             }
             self.last_stable_config_snapshot_time = snapshot_time
@@ -167,11 +156,11 @@ class OptimizationSafetyGuard:
         reset_interval: int,
         doorkeeper_bias: Optional[Dict[str, Any]]
     ):
+        # doorkeeper_bias parameter kept for backward compatibility but not used
         with self.lock:
             self.last_applied_config = {
                 "decay_factor": decay_factor,
-                "reset_interval": reset_interval,
-                "doorkeeper_bias": doorkeeper_bias.copy() if doorkeeper_bias else None
+                "reset_interval": reset_interval
             }
 
             if self.in_rollback_state:
@@ -183,8 +172,7 @@ class OptimizationSafetyGuard:
                 return self.last_applied_config.copy()
             return {
                 "decay_factor": None,
-                "reset_interval": 100000,
-                "doorkeeper_bias": None
+                "reset_interval": 100000
             }
     
     def get_last_stable_config(self) -> Optional[Dict[str, Any]]:

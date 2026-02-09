@@ -1,8 +1,8 @@
 redis
 requests
 pymongo
-pymilvus
-sentence-transformers
 prometheus-client
 confluent-kafka
-pydantic
+pandas
+numpy
+matplotlib

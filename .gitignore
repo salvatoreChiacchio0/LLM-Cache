@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -10,21 +11,78 @@ ENV/
 .mypy_cache/
 .pytest_cache/
 
-target/
+# Rust executor (disabled, not needed)
 executor/target/
 
-data/
-models/
+# Data - runtime generated (large files, NOT needed in repo)
+data/log_15M_subset.txt
+data/rec_tmall_product.txt
+data/tianchi_2014002_rec_tmall_log_parta.txt
+data/tianchi_last_1M.txt
+data/UserBehavior.csv
+data/tianchi_index.json
+data/scenarios_found.json
+data/extract_*.py
 
-logs/
-*.log
+# Data - runtime state (regenerated at each run)
+data/redis-aura/
+data/redis-lru/
+data/mongodb/
+data/etcd/
+data/minio_storage/
+data/current_test.json
+data/streamer_final_metrics.json
+data/temporal_metrics/
+data/test_results/
+data/__pycache__/
 
+# Data - scenarios raw (large CSVs, not needed - final JSONs are kept)
+data/scenarios/raw/
+
+# Keep test data and final scenarios (needed to run tests)
+# data/test_data/*.json  -> TRACKED
+# data/scenarios/final/*.json -> TRACKED
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# OS
 *.DS_Store
 Thumbs.db
 
+# Docker runtime
 .docker/
+
+# Environment
 .env
+
+# Analysis (old experiments, not needed for deployment)
+analysis/
+
+# Logs
+logs/
+*.log
+
+# Models (downloaded at runtime by Ollama)
+models/
+
+# Grafana storage (runtime)
+grafana-storage/
+
+# Documentation (keep essential docs, exclude analysis/experiments)
+*.md
+!README.md
+!OLLAMA_SETUP.md
+!design.md
+!PARAMETER_VERIFICATION.md
+!DEPLOYMENT.md
+
+# PowerShell scripts (Windows only, not needed on Linux server)
+*.ps1
+
+# Docker override files (generated automatically)
+docker-compose.override.yml
+docker-compose.gpu.yml

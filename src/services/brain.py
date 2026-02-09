@@ -3,9 +3,10 @@ import time
 import requests
 import threading
 import signal
+from pathlib import Path
 from ..core.config import (
     KAFKA_TOPIC_STATS, KAFKA_TOPIC_PLAN,
-    USE_GROQ, GROQ_API_KEY, GROQ_API_URL, GROQ_MODEL,
+    USE_GROQ,
     LLM_API_URL, LLM_MODEL, OLLAMA_HOST,
     OLLAMA_TIMEOUT_SEC, OLLAMA_NUM_PREDICT, OLLAMA_NUM_THREAD, OLLAMA_NUM_CTX,
     AURA_CACHE_LIMIT_BYTES,
@@ -15,6 +16,7 @@ from ..core.config import (
 )
 from ..core.db import get_kafka_consumer, get_kafka_producer, get_redis_aura
 from ..modules.prompts import build_global_prompt, build_global_prompt_small, _is_small_model
+from ..modules.metrics import LLM_CALLS, LATENCY_MS, LLM_ERROR_RATE
 from queue import Queue, Empty
 
 shutdown_requested = threading.Event()
@@ -38,19 +40,49 @@ MAX_SNAPSHOT_HISTORY = 7
 best_strategy = None
 best_strategy_lock = threading.Lock()
 
+reset_sketch_call_count = 0
+llm_call_count = 0
+RESET_SKETCH_COOLDOWN = 5
+
+test_complete_time = None
+test_complete_lock = threading.Lock()
+last_test_name = None
+
 def check_ollama_active():
-    if USE_GROQ:
-        return
     try:
         version_url = f"http://{OLLAMA_HOST}:11434/api/version"
         resp = requests.get(version_url, timeout=3)
         resp.raise_for_status()
-        print(f"[BRAIN] Ollama is active: {resp.json().get('version', 'unknown version')}")
+        print(f"Ollama is active: {resp.json().get('version', 'unknown version')}")
     except Exception as e:
-        print(f"[BRAIN] WARNING: Ollama not reachable at http://{OLLAMA_HOST}:11434 ({e})")
+        print(f"WARNING: Ollama not reachable at http://{OLLAMA_HOST}:11434 ({e})")
+
+def reset_brain_state():
+    """Reset all brain state when a test completes or a new test starts."""
+    global current_adaptation_state, volatility_history, opportunity_loss_history
+    global state_entry_snapshot_count, snapshot_history, best_strategy
+    global parameter_history, last_generated_policy, reset_sketch_call_count, llm_call_count
+    global previous_state
+    
+    with best_strategy_lock:
+        best_strategy = None
+    
+    with policy_lock:
+        current_adaptation_state = CacheAdaptationState.NORMAL
+        previous_state = CacheAdaptationState.NORMAL
+        volatility_history = []
+        opportunity_loss_history = []
+        state_entry_snapshot_count = {}
+        snapshot_history = []
+        parameter_history = []
+        last_generated_policy = {}
+        reset_sketch_call_count = 0
+        llm_call_count = 0
+    
+    print("Brain state reset: cleared all adaptation history, strategies, and parameters.")
 
 def signal_handler(signum, frame):
-    print(f"\n[BRAIN] Received signal {signum}, initiating graceful shutdown...")
+    print(f"\nReceived signal {signum}, initiating graceful shutdown...")
     shutdown_requested.set()
 
 def compute_adaptation_state(workload_volatility, current_state, volatility_history, 
@@ -86,13 +118,13 @@ def compute_adaptation_state(workload_volatility, current_state, volatility_hist
 
     if workload_volatility > VOLATILITY_HIGH:
         if current_state != CacheAdaptationState.UNSTABLE:
-            print(f"[BRAIN] State transition: {current_state} → UNSTABLE (volatility={workload_volatility:.3f} > {VOLATILITY_HIGH})")
+            print(f"State transition: {current_state} → UNSTABLE (volatility={workload_volatility:.3f} > {VOLATILITY_HIGH})")
             updated_state_entry_count[CacheAdaptationState.UNSTABLE.value] = 0
         new_state = CacheAdaptationState.UNSTABLE
         return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
 
     if current_state == CacheAdaptationState.UNSTABLE:
-        print(f"[BRAIN] State transition: UNSTABLE → RECOVERY (volatility decreased to {workload_volatility:.3f})")
+        print(f"State transition: UNSTABLE → RECOVERY (volatility decreased to {workload_volatility:.3f})")
         updated_state_entry_count[CacheAdaptationState.RECOVERY.value] = 0
         new_state = CacheAdaptationState.RECOVERY
         return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
@@ -101,13 +133,13 @@ def compute_adaptation_state(workload_volatility, current_state, volatility_hist
         if len(updated_history) >= 2:
             last_two_volatilities = updated_history[-2:]
             if all(v < VOLATILITY_LOW for v in last_two_volatilities):
-                print(f"[BRAIN] State transition: RECOVERY → NORMAL (2 consecutive low volatility: {last_two_volatilities})")
+                print(f"State transition: RECOVERY → NORMAL (2 consecutive low volatility: {last_two_volatilities})")
                 updated_state_entry_count[CacheAdaptationState.NORMAL.value] = 0
                 new_state = CacheAdaptationState.NORMAL
             else:
-                print(f"[BRAIN] State remains RECOVERY (volatility history: {last_two_volatilities})")
+                print(f"State remains RECOVERY (volatility history: {last_two_volatilities})")
         else:
-            print(f"[BRAIN] State remains RECOVERY (insufficient history: {len(updated_history)} snapshots)")
+            print(f"State remains RECOVERY (insufficient history: {len(updated_history)} snapshots)")
         return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
 
     if current_state == CacheAdaptationState.STABLE_BUT_INEFFECTIVE:
@@ -115,20 +147,20 @@ def compute_adaptation_state(workload_volatility, current_state, volatility_hist
 
         if opportunity_loss < OPPORTUNITY_LOSS_THRESHOLD:
             if steps_in_state >= MIN_STEPS_IN_STABLE_BUT_INEFFECTIVE:
-                print(f"[BRAIN] State transition: STABLE_BUT_INEFFECTIVE → NORMAL (opportunity_loss={opportunity_loss:.3f} < {OPPORTUNITY_LOSS_THRESHOLD}, catch-up achieved)")
+                print(f"State transition: STABLE_BUT_INEFFECTIVE → NORMAL (opportunity_loss={opportunity_loss:.3f} < {OPPORTUNITY_LOSS_THRESHOLD}, catch-up achieved)")
                 updated_state_entry_count[CacheAdaptationState.NORMAL.value] = 0
                 new_state = CacheAdaptationState.NORMAL
             else:
-                print(f"[BRAIN] State remains STABLE_BUT_INEFFECTIVE (hysteresis: {steps_in_state}/{MIN_STEPS_IN_STABLE_BUT_INEFFECTIVE} steps, opportunity_loss={opportunity_loss:.3f})")
+                print(f"State remains STABLE_BUT_INEFFECTIVE (hysteresis: {steps_in_state}/{MIN_STEPS_IN_STABLE_BUT_INEFFECTIVE} steps, opportunity_loss={opportunity_loss:.3f})")
             return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
 
         if workload_volatility > VOLATILITY_HIGH:
-            print(f"[BRAIN] State transition: STABLE_BUT_INEFFECTIVE → UNSTABLE (volatility spike: {workload_volatility:.3f} > {VOLATILITY_HIGH})")
+            print(f"State transition: STABLE_BUT_INEFFECTIVE → UNSTABLE (volatility spike: {workload_volatility:.3f} > {VOLATILITY_HIGH})")
             updated_state_entry_count[CacheAdaptationState.UNSTABLE.value] = 0
             new_state = CacheAdaptationState.UNSTABLE
             return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
 
-        print(f"[BRAIN] State remains STABLE_BUT_INEFFECTIVE (steps={steps_in_state}, opportunity_loss={opportunity_loss:.3f}, volatility={workload_volatility:.3f})")
+        print(f"State remains STABLE_BUT_INEFFECTIVE (steps={steps_in_state}, opportunity_loss={opportunity_loss:.3f}, volatility={workload_volatility:.3f})")
         return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
 
     if current_state == CacheAdaptationState.NORMAL:
@@ -144,7 +176,7 @@ def compute_adaptation_state(workload_volatility, current_state, volatility_hist
                 all_underperforming = all(ol > OPPORTUNITY_LOSS_THRESHOLD for ol in recent_opp_losses)
 
                 if all_stable and all_underperforming:
-                    print(f"[BRAIN] State transition: NORMAL → STABLE_BUT_INEFFECTIVE "
+                    print(f"State transition: NORMAL → STABLE_BUT_INEFFECTIVE "
                           f"(volatility={workload_volatility:.3f} < {LOW_VOLATILITY_THRESHOLD}, "
                           f"opportunity_loss={opportunity_loss:.3f} > {OPPORTUNITY_LOSS_THRESHOLD}, "
                           f"persisted for {REQUIRED_CONSECUTIVE_SNAPSHOTS} snapshots)")
@@ -152,7 +184,7 @@ def compute_adaptation_state(workload_volatility, current_state, volatility_hist
                     new_state = CacheAdaptationState.STABLE_BUT_INEFFECTIVE
                     return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
             elif force_attack_mode:
-                print(f"[BRAIN] ⚡ ATTACK MODE: State transition: NORMAL → STABLE_BUT_INEFFECTIVE "
+                print(f"ATTACK MODE: State transition: NORMAL → STABLE_BUT_INEFFECTIVE "
                       f"(volatility={workload_volatility:.3f} > 0.35, gap={improvement:.3f} < 5%)")
                 updated_state_entry_count[CacheAdaptationState.STABLE_BUT_INEFFECTIVE.value] = 0
                 new_state = CacheAdaptationState.STABLE_BUT_INEFFECTIVE
@@ -161,103 +193,14 @@ def compute_adaptation_state(workload_volatility, current_state, volatility_hist
     return new_state, updated_history, updated_opp_loss_history, updated_state_entry_count
 
 def call_llm(prompt):
-    print("[BRAIN] Calling LLM...")
+    print("Calling LLM...")
     t0 = time.time()
     policy_data = None
     
+    LLM_CALLS.inc()
+    
     try:
-        if USE_GROQ:
-            if not GROQ_API_KEY or not GROQ_API_KEY.strip():
-                print("[ERROR] GROQ_API_KEY is empty or not set!")
-                return None
-            
-            headers = {
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            }
-            
-            system_content = """You are an Intelligent TinyLFU meta-controller with memory and reasoning capabilities. You adapt TinyLFU admission policy parameters based on workload dynamics, historical performance, and cluster trends.
-
-CRITICAL: You MUST NOT evict keys, prefetch keys, or set TTLs. You can ONLY adjust TinyLFU parameters.
-
-You MUST provide Chain-of-Thought reasoning before making parameter decisions. Analyze:
-1. Historical performance patterns (what worked, what didn't)
-2. Cluster volume trends (RISING/DROPPING/STABLE)
-3. Workload volatility and hit ratio changes
-4. Relationship between previous decisions and outcomes
-
-Respond ONLY with valid JSON using this exact format:
-{
-    "reasoning": "Your technical analysis explaining why these parameter changes are needed (2-4 sentences)",
-    "tinylfu_control": {
-        "decay_factor": 0.95 | null,
-        "reset_interval": 80000 | null,
-        "doorkeeper_bias": {
-            "category_name": 1
-        } | null
-    }
-}
-
-Constraints:
-- reasoning: REQUIRED - Brief technical analysis (2-4 sentences) explaining your decision
-- tinylfu_control: REQUIRED (but all fields inside may be null)
-- decay_factor: null if no change, otherwise float in [0.0, 1.0] - scales down frequency counters
-- reset_interval: null if no change, otherwise int in [50000, 500000] - accesses before reset
-- doorkeeper_bias: null if no change, otherwise dict with category->int mappings (positive = more likely to admit)
-- NO other fields allowed
-- NO cluster admission decisions
-- NO evict/prefetch/TTL operations
-
-Respond ONLY with valid JSON. Do NOT use markdown formatting (no ```json or ```). Return RAW JSON only."""
-            
-            payload = {
-                "model": GROQ_MODEL,
-                "messages": [
-                    {"role": "system", "content": system_content},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.7,
-                "max_tokens": 2048,
-                "response_format": {
-                    "type": "json_object"
-                }
-            }
-            
-            print(f"[BRAIN] Calling Groq API with model: {GROQ_MODEL}")
-            resp = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=30)
-            
-            if resp.status_code == 400:
-                error_body = resp.text
-                print(f"[ERROR] Groq API returned 400 Bad Request")
-                print(f"[ERROR] Response body: {error_body}")
-                try:
-                    error_json = resp.json()
-                    if "error" in error_json:
-                        print(f"[ERROR] Error message: {error_json['error'].get('message', 'Unknown error')}")
-                        print(f"[ERROR] Error type: {error_json['error'].get('type', 'Unknown')}")
-                except:
-                    pass
-                return None
-            
-            try:
-                resp.raise_for_status()
-            except requests.exceptions.HTTPError as e:
-                print(f"[ERROR] Groq API Error: {e}")
-                print(f"[ERROR] Status Code: {resp.status_code}")
-                print(f"[ERROR] Response Body: {resp.text}")
-                return None
-                
-            response_data = resp.json()
-            content = response_data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            
-            if not content:
-                print("[ERROR] Empty response from Groq API")
-                return None
-            
-            policy_data = json.loads(content)
-            
-        else:
-            schema_hint = """Output JSON Schema:
+        schema_hint = """Output JSON Schema:
 {
   "type": "object",
   "properties": {
@@ -267,12 +210,10 @@ Respond ONLY with valid JSON. Do NOT use markdown formatting (no ```json or ```)
       "properties": {
         "decay_factor": {"type": ["number", "null"]},
         "reset_interval": {"type": ["integer", "null"]},
-        "doorkeeper_bias": {
-          "type": ["object", "null"],
-          "additionalProperties": {"type": "integer"}
-        }
+        "reset_sketch": {"type": ["boolean", "null"]},
+        "admission_bias": {"type": ["integer", "null"]}
       },
-      "required": ["decay_factor", "reset_interval", "doorkeeper_bias"],
+      "required": ["decay_factor", "reset_interval", "reset_sketch", "admission_bias"],
       "additionalProperties": false
     }
   },
@@ -281,156 +222,212 @@ Respond ONLY with valid JSON. Do NOT use markdown formatting (no ```json or ```)
 }
 """
 
-            system_prompt = """You are an Intelligent TinyLFU meta-controller with memory and reasoning capabilities. You adapt TinyLFU admission policy parameters based on workload dynamics, historical performance, and cluster trends.
+        system_prompt = """You are a cache optimizer. You tune TinyLFU admission parameters to BEAT the baseline cache.
 
-CRITICAL: You MUST NOT evict keys, prefetch keys, or set TTLs. You can ONLY adjust TinyLFU parameters.
+Your goal: make Aura Hit Ratio HIGHER than Baseline Hit Ratio (positive improvement).
 
-Respond ONLY with valid JSON using this exact format:
-{
-    "reasoning": "Your technical analysis explaining why these parameter changes are needed (2-4 sentences)",
-    "tinylfu_control": {
-        "decay_factor": 0.95 | null,
-        "reset_interval": 80000 | null,
-        "doorkeeper_bias": {"category_name": 1} | null
-    }
-}
+RULES:
+1. You can ONLY set these 4 parameters (set null to keep unchanged)
+2. NEVER repeat the same parameter values if improvement was zero or negative
+3. If your last parameters didn't help, you MUST try different values
+4. Focus on admission_bias - it has the biggest impact
 
-STRICTLY follow the schema below:
+Respond with valid JSON only:
 """ + schema_hint
-            
-            tinylfu_schema = {
-                "type": "object",
-                "properties": {
-                    "reasoning": {"type": "string"},
-                    "tinylfu_control": {
-                        "type": "object",
-                        "properties": {
-                            "decay_factor": {"type": ["number", "null"]},
-                            "reset_interval": {"type": ["integer", "null"]},
-                            "doorkeeper_bias": {
-                                "type": ["object", "null"],
-                                "additionalProperties": {"type": "integer"}
-                            }
-                        },
-                        "required": ["decay_factor", "reset_interval", "doorkeeper_bias"],
-                        "additionalProperties": False
-                    }
-                },
-                "required": ["reasoning", "tinylfu_control"],
-                "additionalProperties": False
-            }
-
-            payload = {
-                "model": LLM_MODEL,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                "format": tinylfu_schema,
-                "stream": False,
-                "options": {
-                    "temperature": 0,
-                    "num_predict": OLLAMA_NUM_PREDICT,
-                    "num_thread": OLLAMA_NUM_THREAD,
-                    "num_ctx": OLLAMA_NUM_CTX,
-                    "repeat_penalty": 1.1,
-                    "top_k": 40,
-                    "top_p": 0.9
-                }
-            }
-            
-            print(f"[BRAIN] Calling Ollama API with model: {LLM_MODEL}")
-            print(f"[BRAIN] API URL: {LLM_API_URL}")
-            print(f"[BRAIN] Optimized settings: num_predict={OLLAMA_NUM_PREDICT}, num_thread={OLLAMA_NUM_THREAD}, num_ctx={OLLAMA_NUM_CTX}")
-            resp = requests.post(LLM_API_URL, json=payload, timeout=OLLAMA_TIMEOUT_SEC)
-            
-            if resp.status_code == 404:
-                print(f"[ERROR] Model '{LLM_MODEL}' not found in Ollama. Available models:")
-                try:
-                    list_resp = requests.get("http://ollama:11434/api/tags", timeout=5)
-                    if list_resp.status_code == 200:
-                        models = list_resp.json().get("models", [])
-                        for m in models:
-                            print(f"  - {m.get('name', 'unknown')}")
-                except:
-                    print("  (Could not fetch model list)")
-                return None
-            
-            resp.raise_for_status()
-            response_data = resp.json()
-            content = response_data.get("message", {}).get("content", "")
-            
-            if not content:
-                print("[ERROR] Empty response from Ollama API")
-                print(f"[DEBUG] Full response: {response_data}")
-                return None
-            
-            policy_data = json.loads(content)
-            
-    except Exception as e:
-        print(f"[ERROR] LLM Call failed: {e}")
-        return None
         
-    print(f"[BRAIN] LLM Latency: {time.time()-t0:.2f}s")
+        tinylfu_schema = {
+            "type": "object",
+            "properties": {
+                "reasoning": {"type": "string"},
+                "tinylfu_control": {
+                    "type": "object",
+                    "properties": {
+                        "decay_factor": {"type": ["number", "null"]},
+                        "reset_interval": {"type": ["integer", "null"]},
+                        "reset_sketch": {"type": ["boolean", "null"]},
+                        "admission_bias": {"type": ["integer", "null"]}
+                    },
+                    "required": ["decay_factor", "reset_interval", "reset_sketch", "admission_bias"],
+                    "additionalProperties": False
+                }
+            },
+            "required": ["reasoning", "tinylfu_control"],
+            "additionalProperties": False
+        }
+
+        payload = {
+            "model": LLM_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "format": tinylfu_schema,
+            "stream": False,
+            "options": {
+                "temperature": 0,
+                "num_predict": OLLAMA_NUM_PREDICT,
+                "num_thread": OLLAMA_NUM_THREAD,
+                "num_ctx": OLLAMA_NUM_CTX,
+                "repeat_penalty": 1.1,
+                "top_k": 40,
+                "top_p": 0.9
+            }
+        }
+        
+        print(f"Calling Ollama API with model: {LLM_MODEL}")
+        print(f"API URL: {LLM_API_URL}")
+        print(f"Optimized settings: num_predict={OLLAMA_NUM_PREDICT}, num_thread={OLLAMA_NUM_THREAD}, num_ctx={OLLAMA_NUM_CTX}")
+        resp = requests.post(LLM_API_URL, json=payload, timeout=OLLAMA_TIMEOUT_SEC)
+        
+        if resp.status_code == 404:
+            print(f"ERROR: Model '{LLM_MODEL}' not found in Ollama. Available models:")
+            try:
+                list_resp = requests.get(f"http://{OLLAMA_HOST}:11434/api/tags", timeout=5)
+                if list_resp.status_code == 200:
+                    models = list_resp.json().get("models", [])
+                    for m in models:
+                        print(f"  - {m.get('name', 'unknown')}")
+            except:
+                print("  (Could not fetch model list)")
+            LLM_ERROR_RATE.inc()
+            return None
+        
+        resp.raise_for_status()
+        response_data = resp.json()
+        content = response_data.get("message", {}).get("content", "")
+        
+        if not content:
+            print("ERROR: Empty response from Ollama API")
+            print(f"DEBUG: Full response: {response_data}")
+            LLM_ERROR_RATE.inc()
+            return None
+        
+        policy_data = json.loads(content)
+        
+    except Exception as e:
+        print(f"ERROR: LLM Call failed: {e}")
+        LLM_ERROR_RATE.inc()
+        return None
+    
+    latency_seconds = time.time() - t0
+    latency_ms = latency_seconds * 1000
+    LATENCY_MS.set(latency_ms)
+        
+    print(f"LLM Latency: {latency_seconds:.2f}s ({latency_ms:.2f}ms)")
     return policy_data
 
 llm_queue = Queue()
 
+def save_temporal_metrics(cache_metrics):
+    try:
+        metrics_dir = Path("data/temporal_metrics")
+        metrics_dir.mkdir(parents=True, exist_ok=True)
+        
+        metrics_file = metrics_dir / "llm_calls_temporal.json"
+        
+        if metrics_file.exists():
+            try:
+                with open(metrics_file, 'r') as f:
+                    all_metrics = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                all_metrics = []
+        else:
+            all_metrics = []
+        
+        all_metrics.append(cache_metrics)
+        
+        with open(metrics_file, 'w') as f:
+            json.dump(all_metrics, f, indent=2)
+        
+        print(f"Saved temporal metrics: LLM call #{len(all_metrics)}, AURA HR={cache_metrics.get('aura_hit_ratio', 0):.4f}, Baseline HR={cache_metrics.get('baseline_hit_ratio', 0):.4f}")
+    except Exception as e:
+        print(f"WARNING: Failed to save temporal metrics: {e}")
+        import traceback
+        traceback.print_exc()
+
 def llm_worker_thread(producer):
-    print("[BRAIN] LLM Worker Thread started")
+    global llm_call_count, reset_sketch_call_count, test_complete_time, test_complete_lock, last_test_name
+    print("LLM Worker Thread started")
     while not shutdown_requested.is_set():
         try:
             task = llm_queue.get(timeout=1.0)
             if task is None: continue
             
+            with test_complete_lock:
+                if test_complete_time is not None:
+                    print(f"LLM Worker: Skipping task - test already completed. Waiting for new test...")
+                    llm_queue.task_done()
+                    continue
+            
             prompt = task.get("prompt")
             mode = task.get("mode", "tinylfu_parameter_update")
+            cache_metrics = task.get("cache_metrics")
+            
+            if cache_metrics:
+                save_temporal_metrics(cache_metrics)
+            else:
+                print("WARNING: No cache_metrics in LLM task, skipping temporal metrics save")
+            
+            with policy_lock:
+                llm_call_count += 1
+                if llm_call_count >= RESET_SKETCH_COOLDOWN:
+                    reset_sketch_call_count = max(0, reset_sketch_call_count - 1)
+                    llm_call_count = 0
             
             policy_dict = call_llm(prompt)
             
             if policy_dict:
                 tinylfu_control = policy_dict.get("tinylfu_control")
                 if not tinylfu_control:
-                    print(f"[BRAIN] ERROR: LLM output missing 'tinylfu_control' field: {policy_dict}")
+                    print(f"ERROR: LLM output missing 'tinylfu_control' field: {policy_dict}")
                     llm_queue.task_done()
                     continue
 
                 decay_factor = tinylfu_control.get("decay_factor")
                 reset_interval = tinylfu_control.get("reset_interval")
-                doorkeeper_bias = tinylfu_control.get("doorkeeper_bias")
+                reset_sketch = tinylfu_control.get("reset_sketch")
+                admission_bias = tinylfu_control.get("admission_bias")
 
                 if decay_factor is not None:
                     if not isinstance(decay_factor, (int, float)) or not (0.0 <= decay_factor <= 1.0):
-                        print(f"[BRAIN] ERROR: Invalid decay_factor {decay_factor}, must be float in [0.0, 1.0]")
+                        print(f"ERROR: Invalid decay_factor {decay_factor}, must be float in [0.0, 1.0]")
                         decay_factor = None
 
                 if reset_interval is not None:
                     if not isinstance(reset_interval, int) or not (50000 <= reset_interval <= 500000):
-                        print(f"[BRAIN] ERROR: Invalid reset_interval {reset_interval}, must be int in [50000, 500000]")
+                        print(f"ERROR: Invalid reset_interval {reset_interval}, must be int in [50000, 500000]")
                         reset_interval = None
-
-                if doorkeeper_bias is not None:
-                    if not isinstance(doorkeeper_bias, dict):
-                        print(f"[BRAIN] ERROR: Invalid doorkeeper_bias {doorkeeper_bias}, must be dict")
-                        doorkeeper_bias = None
-                    else:
-                        validated_bias = {}
-                        for cat, bias_val in doorkeeper_bias.items():
-                            if isinstance(bias_val, int):
-                                validated_bias[cat] = bias_val
+                
+                if admission_bias is not None:
+                    if not isinstance(admission_bias, int) or not (-5 <= admission_bias <= 5):
+                        print(f"ERROR: Invalid admission_bias {admission_bias}, must be int in [-5, 5]")
+                        admission_bias = None
+                
+                if reset_sketch is not None:
+                    if not isinstance(reset_sketch, bool):
+                        print(f"ERROR: Invalid reset_sketch {reset_sketch}, must be boolean")
+                        reset_sketch = None
+                    elif reset_sketch is False:
+                        reset_sketch = None
+                    elif reset_sketch is True:
+                        with policy_lock:
+                            if reset_sketch_call_count >= RESET_SKETCH_COOLDOWN:
+                                print(f"WARNING: Reset sketch requested but cooldown active. {reset_sketch_call_count} resets in last {llm_call_count} LLM calls (max {RESET_SKETCH_COOLDOWN} allowed). Forcing reset_sketch to null.")
+                                reset_sketch = None
                             else:
-                                print(f"[BRAIN] WARNING: Invalid bias value for {cat}: {bias_val}, skipping")
-                        doorkeeper_bias = validated_bias if validated_bias else None
+                                reset_sketch_call_count += 1
+                                print(f"Reset sketch approved. Total resets in last {llm_call_count} calls: {reset_sketch_call_count}/{RESET_SKETCH_COOLDOWN}")
+                
                 
                 with policy_lock:
                     adaptation_state = current_adaptation_state
 
                 reasoning = policy_dict.get("reasoning", "")
                 if not reasoning or not isinstance(reasoning, str):
-                    print(f"[BRAIN] ⚠️ WARNING: LLM did not provide reasoning field")
+                    print(f"WARNING: LLM did not provide reasoning field")
                     reasoning = "No reasoning provided"
                 else:
-                    print(f"[BRAIN] ✓ LLM Reasoning: {reasoning}..." if len(reasoning) > 200 else f"[BRAIN] ✓ LLM Reasoning: {reasoning}")
+                    print(f"LLM Reasoning: {reasoning}..." if len(reasoning) > 200 else f"LLM Reasoning: {reasoning}")
 
                 plan_output = {
                     "type": "tinylfu_parameter_update",
@@ -440,7 +437,8 @@ def llm_worker_thread(producer):
                     "tinylfu_control": {
                         "decay_factor": decay_factor,
                         "reset_interval": reset_interval,
-                        "doorkeeper_bias": doorkeeper_bias
+                        "reset_sketch": reset_sketch,
+                        "admission_bias": admission_bias
                     }
                 }
 
@@ -458,22 +456,24 @@ def llm_worker_thread(producer):
                             for p in parameter_history[-3:]
                         )
                         if all_same:
-                            print(f"[BRAIN] ⚠️ WARNING: LLM using same TinyLFU params for 3+ iterations")
+                            print(f"WARNING: LLM using same TinyLFU params for 3+ iterations")
 
                 changes = []
                 if decay_factor is not None:
                     changes.append(f"decay_factor={decay_factor}")
                 if reset_interval is not None:
                     changes.append(f"reset_interval={reset_interval}")
-                if doorkeeper_bias is not None:
-                    changes.append(f"doorkeeper_bias={len(doorkeeper_bias)} categories")
+                if reset_sketch is not None:
+                    changes.append(f"reset_sketch={reset_sketch}")
+                if admission_bias is not None:
+                    changes.append(f"admission_bias={admission_bias}")
                 
                 if changes:
-                    print(f"[BRAIN] TinyLFU parameter update: {', '.join(changes)}")
+                    print(f"TinyLFU parameter update: {', '.join(changes)}")
                 else:
-                    print(f"[BRAIN] TinyLFU parameter update: no changes (all null)")
+                    print(f"TinyLFU parameter update: no changes (all null)")
                 
-                print("[BRAIN] Producing Plan to Kafka...")
+                print("Producing Plan to Kafka...")
                 producer.produce(KAFKA_TOPIC_PLAN, json.dumps(plan_output).encode('utf-8'))
                 producer.flush()
             
@@ -481,7 +481,7 @@ def llm_worker_thread(producer):
         except Empty:
             continue
         except Exception as e:
-            print(f"[ERROR] LLM Worker Error: {e}")
+            print(f"ERROR: LLM Worker Error: {e}")
             import traceback
             traceback.print_exc()
 
@@ -489,21 +489,19 @@ def run_brain():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    print(f"[BRAIN] LLM backend: {'GROQ' if USE_GROQ else 'OLLAMA'}")
-    print(f"[BRAIN] GROQ_API_KEY set: {bool(GROQ_API_KEY)}")
-    print(f"[BRAIN] GROQ_MODEL: {GROQ_MODEL}")
-    print(f"[BRAIN] OLLAMA_HOST: {OLLAMA_HOST}")
-    print(f"[BRAIN] OLLAMA_MODEL: {LLM_MODEL}")
+    print(f"LLM backend: OLLAMA (local)")
+    print(f"OLLAMA_HOST: {OLLAMA_HOST}")
+    print(f"OLLAMA_MODEL: {LLM_MODEL}")
 
     check_ollama_active()
     
-    print("[BRAIN] Initializing Kafka Consumer/Producer...")
+    print("Initializing Kafka Consumer/Producer...")
     producer = get_kafka_producer("aura_brain_producer")
     
     worker = threading.Thread(target=llm_worker_thread, args=(producer,), daemon=True)
     worker.start()
 
-    print("[BRAIN] Connecting to Kafka topic aura-stats...")
+    print("Connecting to Kafka topic aura-stats...")
     consumer = None
     retry_count = 0
     max_retries = 30
@@ -513,16 +511,16 @@ def run_brain():
             consumer = get_kafka_consumer("aura_brain_group", [KAFKA_TOPIC_STATS])
             msg = consumer.poll(0.5)
             if msg and msg.error() and "UNKNOWN_TOPIC_OR_PART" in str(msg.error()):
-                print(f"[BRAIN] Topic {KAFKA_TOPIC_STATS} not ready yet, retrying... ({retry_count}/{max_retries})")
+                print(f"Topic {KAFKA_TOPIC_STATS} not ready yet, retrying... ({retry_count}/{max_retries})")
                 consumer.close()
                 consumer = None
                 retry_count += 1
                 time.sleep(2)
                 continue
-            print(f"[BRAIN] Successfully connected to Kafka topic {KAFKA_TOPIC_STATS}")
+            print(f"Successfully connected to Kafka topic {KAFKA_TOPIC_STATS}")
             break
         except Exception as e:
-            print(f"[BRAIN] Failed to connect to Kafka, retrying... ({retry_count}/{max_retries}): {e}")
+            print(f"Failed to connect to Kafka, retrying... ({retry_count}/{max_retries}): {e}")
             if consumer:
                 try:
                     consumer.close()
@@ -533,12 +531,14 @@ def run_brain():
             time.sleep(2)
     
     if consumer is None:
-        print(f"[BRAIN] ERROR: Failed to connect to Kafka after {max_retries} retries. Exiting.")
+        print(f"ERROR: Failed to connect to Kafka after {max_retries} retries. Exiting.")
         return
     
-    print("[BRAIN] Entering loop...")
+    print("Entering loop...")
     last_policy = None
     last_policy_copy = None
+    last_snapshot_time = time.time()
+    global test_complete_time, last_test_name
     
     try:
         while not shutdown_requested.is_set():
@@ -548,23 +548,54 @@ def run_brain():
             if msg.error():
                 error_str = str(msg.error())
                 if "UNKNOWN_TOPIC_OR_PART" in error_str:
-                    print(f"[BRAIN] Topic {KAFKA_TOPIC_STATS} not available yet, waiting...")
+                    print(f"Topic {KAFKA_TOPIC_STATS} not available yet, waiting...")
                     time.sleep(5)
                     continue
-                print(f"[ERROR] Kafka Consumer: {msg.error()}")
+                print(f"ERROR: Kafka Consumer: {msg.error()}")
                 continue
                 
             try:
                 stats_json = json.loads(msg.value().decode('utf-8'))
                 
+                test_complete = stats_json.get('test_complete', False)
+                current_test_name = stats_json.get('test_name', None)
+                
+                if test_complete:
+                    test_name = stats_json.get('test_name', 'unknown')
+                    final_events = stats_json.get('final_events', 0)
+                    print(f"Received test_complete signal for test: {test_name} (final_events: {final_events})")
+                    print(f"Resetting brain state and waiting for new test...")
+                    reset_brain_state()
+                    with test_complete_lock:
+                        test_complete_time = time.time()
+                        last_test_name = test_name
+                    last_snapshot_time = time.time()
+                    continue
+                
+                with test_complete_lock:
+                    if test_complete_time is not None:
+                        if current_test_name and current_test_name != last_test_name:
+                            print(f"New test detected: {current_test_name} (was: {last_test_name}). Resetting state and resuming processing...")
+                            reset_brain_state()
+                            test_complete_time = None
+                            last_test_name = current_test_name
+                        else:
+                            print(f"Ignoring snapshot - test already completed. Waiting for new test...")
+                            continue
+                
+                if current_test_name:
+                    with test_complete_lock:
+                        if last_test_name is None or current_test_name != last_test_name:
+                            if last_test_name is not None:
+                                print(f"New test started: {current_test_name} (was: {last_test_name}). Resetting state...")
+                                reset_brain_state()
+                            last_test_name = current_test_name
+                
                 total_events = stats_json.get('total_events', 0)
                 recent_sequence = stats_json.get('recent_access_sequence', [])
+                last_snapshot_time = time.time()
                 
-                cluster_stats = stats_json.get("cluster_stats", {})
-                print(f"[BRAIN] Received stats snapshot. Total events: {total_events}, Clusters in stats: {len(cluster_stats) if cluster_stats else 0}")
-                if cluster_stats:
-                    sample_cluster_ids = list(cluster_stats.keys())[:10]
-                    print(f"[BRAIN] Sample cluster IDs from streamer: {sample_cluster_ids}")
+                print(f"Received stats snapshot. Total events: {total_events}")
                 
                 cache_full = 50.0 
                 try:
@@ -574,9 +605,9 @@ def run_brain():
                     cache_full = (used / AURA_CACHE_LIMIT_BYTES) * 100.0
                     cache_full = min(100.0, max(0.0, cache_full))
                 except Exception as e:
-                    print(f"[WARNING] Failed to query Redis memory: {e}. Defaulting to 50%")
+                    print(f"WARNING: Failed to query Redis memory: {e}. Defaulting to 50%")
                 
-                print(f"[BRAIN] Current Cache Usage: {cache_full:.1f}%")
+                print(f"Current Cache Usage: {cache_full:.1f}%")
 
                 workload_volatility = stats_json.get("workload_volatility", 0.0)
 
@@ -603,8 +634,8 @@ def run_brain():
                     baseline_delta_str = f"{delta_baseline_hr:.4f}" if delta_baseline_hr is not None else "None"
                     aura_hr_str = f"{window_aura_hr:.4f}" if window_aura_hr is not None else "None"
                     aura_delta_str = f"{delta_aura_hr:.4f}" if delta_aura_hr is not None else "None"
-                    print(f"[BRAIN] DEBUG - Baseline: hits={baseline_hits}, misses={baseline_misses}, HR={baseline_hr_str}, delta={baseline_delta_str}")
-                    print(f"[BRAIN] DEBUG - Aura: hits={aura_hits}, misses={aura_misses}, HR={aura_hr_str}, delta={aura_delta_str}")
+                    print(f"DEBUG - Baseline: hits={baseline_hits}, misses={baseline_misses}, HR={baseline_hr_str}, delta={baseline_delta_str}")
+                    print(f"DEBUG - Aura: hits={aura_hits}, misses={aura_misses}, HR={aura_hr_str}, delta={aura_delta_str}")
                 
                 with policy_lock:
                     global current_adaptation_state, volatility_history, opportunity_loss_history, state_entry_snapshot_count
@@ -628,10 +659,10 @@ def run_brain():
                         opp_loss = round(opp_loss, 6)
                         opp_loss_str = f", opportunity_loss={opp_loss:.6f} (delta-based: {delta_baseline_hr:.6f} - {delta_aura_hr:.6f})"
 
-                        print(f"[BRAIN_DEBUG] WindowHits[Aura: {aura_hits}, Base: {baseline_hits}] -> DeltaHR[Aura: {delta_aura_hr:.6f}, Base: {delta_baseline_hr:.6f}] -> OppLoss: {opp_loss:.6f}")
+                        print(f"DEBUG: WindowHits[Aura: {aura_hits}, Base: {baseline_hits}] -> DeltaHR[Aura: {delta_aura_hr:.6f}, Base: {delta_baseline_hr:.6f}] -> OppLoss: {opp_loss:.6f}")
 
                         if abs(opp_loss) < 0.0001:
-                            print(f"[BRAIN] ⚠️ WARNING: Opportunity loss is near zero ({opp_loss:.6f}). This may indicate:")
+                            print(f"WARNING: Opportunity loss is near zero ({opp_loss:.6f}). This may indicate:")
                             print(f"    - First snapshot (no previous values for delta)")
                             print(f"    - Both caches performing identically")
                             print(f"    - Precision issue (differences < 0.0001)")
@@ -648,9 +679,9 @@ def run_brain():
                         opp_loss = round(opp_loss, 6)
                         opp_loss_str = f", opportunity_loss={opp_loss:.6f} (absolute: {window_baseline_hr:.6f} - {window_aura_hr:.6f})"
                         if abs(opp_loss) < 0.0001:
-                            print(f"[BRAIN] ⚠️ WARNING: Opportunity loss is near zero ({opp_loss:.6f}) using absolute values")
+                            print(f"WARNING: Opportunity loss is near zero ({opp_loss:.6f}) using absolute values")
                     
-                    print(f"[BRAIN] Adaptation State: {current_adaptation_state.value} (volatility={workload_volatility:.3f}{opp_loss_str})")
+                    print(f"Adaptation State: {current_adaptation_state.value} (volatility={workload_volatility:.3f}{opp_loss_str})")
                 
                 metrics_feedback = {}
 
@@ -714,7 +745,7 @@ def run_brain():
                                     "timestamp": current_time,
                                     "hit_ratio_aura": aura_hr
                                 }
-                                print(f"[BRAIN] 🏆 New Best Strategy: Improvement={improvement:.4f}, Volatility={workload_volatility:.3f}, Params={params_applied}")
+                                print(f"New Best Strategy: Improvement={improvement:.4f}, Volatility={workload_volatility:.3f}, Params={params_applied}")
                         elif best_strategy and (current_time - best_strategy.get("timestamp", 0)) >= 3600:
                             best_strategy = None
 
@@ -727,9 +758,20 @@ def run_brain():
                 with best_strategy_lock:
                     best_strategy_copy = best_strategy.copy() if best_strategy else None
                 
-                if not USE_GROQ and _is_small_model(LLM_MODEL):
+                with policy_lock:
+                    reset_info = {
+                        "recent_resets": reset_sketch_call_count,
+                        "calls_since_last_reset": llm_call_count,
+                        "cooldown_active": reset_sketch_call_count >= RESET_SKETCH_COOLDOWN
+                    }
+                    if metrics_feedback is None:
+                        metrics_feedback = {}
+                    metrics_feedback["reset_sketch_info"] = reset_info
+                
+                # if not USE_GROQ and _is_small_model(LLM_MODEL):  # Commentato per test locali - per groq cloud llm test
+                if _is_small_model(LLM_MODEL):
                     prompt = build_global_prompt_small(stats_json, last_policy_copy, metrics_feedback)
-                    print(f"[BRAIN] Using SMALL prompt for model: {LLM_MODEL}")
+                    print(f"Using SMALL prompt for model: {LLM_MODEL}")
                 else:
                     prompt = build_global_prompt(
                         stats_json,
@@ -741,19 +783,47 @@ def run_brain():
                         best_strategy_copy
                     )
                 
+                params_applied = {}
+                if last_policy_copy and "tinylfu_control" in last_policy_copy:
+                    params_applied = last_policy_copy["tinylfu_control"].copy()
+                
+                cache_metrics = {
+                    "timestamp": time.time(),
+                    "baseline_hit_ratio": window_baseline_hr if window_baseline_hr is not None else 0.0,
+                    "aura_hit_ratio": window_aura_hr if window_aura_hr is not None else 0.0,
+                    "baseline_hits": baseline_hits if baseline_hits is not None else 0,
+                    "baseline_misses": baseline_misses if baseline_misses is not None else 0,
+                    "aura_hits": aura_hits if aura_hits is not None else 0,
+                    "aura_misses": aura_misses if aura_misses is not None else 0,
+                    "improvement_over_baseline": improvement if improvement is not None else 0.0,
+                    "workload_volatility": workload_volatility,
+                    "adaptation_state": current_adaptation_state.value,
+                    "total_events": total_events,
+                    "decay_factor": params_applied.get("decay_factor"),
+                    "reset_interval": params_applied.get("reset_interval"),
+                    "reset_sketch": params_applied.get("reset_sketch"),
+                    "admission_bias": params_applied.get("admission_bias")
+                }
+                
+                with test_complete_lock:
+                    if test_complete_time is not None:
+                        print(f"Skipping LLM call - test already completed.")
+                        continue
+                
                 llm_queue.put({
                     "prompt": prompt, 
-                    "mode": "tinylfu_parameter_update"
+                    "mode": "tinylfu_parameter_update",
+                    "cache_metrics": cache_metrics
                 })
                 
             except Exception as e:
-                print(f"[ERROR] Brain Loop Error: {e}")
+                print(f"ERROR: Brain Loop Error: {e}")
                 import traceback
                 traceback.print_exc()
                 
     finally:
         consumer.close()
-        print("[BRAIN] Shutdown.")
+        print("Shutdown.")
 
 if __name__ == "__main__":
     run_brain()

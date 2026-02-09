@@ -6,6 +6,3 @@ scrape_configs:
     static_configs:
       - targets: ["streamer:8000"]
 
-  - job_name: "rust-policy-executor"
-    static_configs:
-      - targets: ["policy-executor:9097"]  

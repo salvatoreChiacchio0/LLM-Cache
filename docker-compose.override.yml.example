@@ -1,0 +1,11 @@
+version: '3.8'
+
+# Questo file viene creato automaticamente se la GPU non è disponibile
+# Per forzare modalità CPU, rinomina questo file in docker-compose.override.yml
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices: []

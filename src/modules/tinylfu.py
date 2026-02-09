@@ -174,6 +174,7 @@ class TinyLFU:
         self.access_count = 0
         self.lock = threading.RLock()
         self.decay_factor_applied = None
+        self.admission_bias = 0
         
         self.cache_order = OrderedDict()
         self.max_cache_size = 10000
@@ -183,7 +184,10 @@ class TinyLFU:
         self.eviction_count = 0
         self.ghost_hits = 0
         
-        self.doorkeeper_bias = {}
+        self.should_admit_calls = 0
+        self.should_admit_rejections = 0
+        self.should_admit_cache_full_calls = 0
+        self.debug_logging = False
     
     def _sync_cache_tracking(self):
         """
@@ -251,45 +255,99 @@ class TinyLFU:
         
         return bool(exists)
     
-    def should_admit(self, key: str, victim_key: Optional[str] = None, category: Optional[str] = None) -> bool:
+    def record_access(self, key: str):
+        """
+        Record an access to key and update frequency (for tracking purposes).
+        This is called for every item access, even if not in cache.
+        """
+        with self.lock:
+            first_time = self.doorkeeper.allow(key)
+            if not first_time:
+                self.sketch.increment(key, 1)
+                self.access_count += 1
+            
+            if self._should_reset():
+                self._reset_frequency_data()
+    
+    def should_admit(self, key: str, victim_key: Optional[str] = None) -> bool:
         """
         Determine if a new key should be admitted to cache.
+        Uses admission_bias to shift the decision threshold.
+        
+        admission_bias > 0: favors new items (admit more, faster adaptation)
+        admission_bias < 0: favors existing items (reject more, preserve cache)
+        admission_bias = 0: standard TinyLFU behavior
         
         Args:
             key: The new key to potentially admit
             victim_key: Optional key that would be evicted to make room
-            category: Optional category/cluster identifier for bias application
         
         Returns:
             True if key should be admitted, False otherwise
         """
-        bias_adjustment = 0
-        bias_applied = False
-        if category and category in self.doorkeeper_bias:
-            bias_adjustment = self.doorkeeper_bias[category]
-            bias_applied = True
+        with self.lock:
+            self.should_admit_calls += 1
         
         if victim_key is None:
             TINYLFU_ADMISSIONS.inc()
             return True
         
+        with self.lock:
+            self.should_admit_cache_full_calls += 1
+        
         new_freq = self.get_frequency(key)
         victim_freq = self.get_frequency(victim_key)
         
-        effective_new_freq = new_freq + bias_adjustment
-        effective_victim_freq = victim_freq
+        should_admit = (new_freq + self.admission_bias) > victim_freq
         
-        should_admit = effective_new_freq > effective_victim_freq
-        
-        if bias_applied and should_admit and (new_freq <= victim_freq):
-            TINYLFU_BIAS_ADMISSIONS.inc()
+        if self.debug_logging:
+            print(f"[TinyLFU should_admit] key={key[:20]}, victim={victim_key[:20] if victim_key else 'None'}, "
+                  f"new_freq={new_freq}, victim_freq={victim_freq}, bias={self.admission_bias}, "
+                  f"decision={'ADMIT' if should_admit else 'REJECT'}")
         
         if should_admit:
             TINYLFU_ADMISSIONS.inc()
         else:
             TINYLFU_REJECTIONS.inc()
+            with self.lock:
+                self.should_admit_rejections += 1
         
         return should_admit
+    
+    def set_admission_bias(self, bias: int):
+        """
+        Set the admission bias for TinyLFU admission decisions.
+        
+        Args:
+            bias: Integer in [-5, 5].
+                  Positive = favor new items (admit more, faster adaptation)
+                  Negative = favor existing items (reject more, preserve cache stability)
+                  0 = standard TinyLFU behavior
+        """
+        if not (-5 <= bias <= 5):
+            raise ValueError(f"admission_bias must be in [-5, 5], got {bias}")
+        
+        with self.lock:
+            old_bias = self.admission_bias
+            self.admission_bias = bias
+        
+        print(f"[TinyLFU] Admission bias updated: {old_bias} -> {bias}")
+    
+    def get_cache_fullness(self) -> float:
+        """
+        Get cache fullness percentage (0.0 to 1.0).
+        """
+        try:
+            cache_info = self.redis.info("memory")
+            used_memory = cache_info.get("used_memory", 0)
+            max_memory = cache_info.get("maxmemory", 0)
+            if max_memory > 0:
+                return used_memory / max_memory
+        except:
+            pass
+        
+        with self.lock:
+            return len(self.cache_order) / self.max_cache_size if self.max_cache_size > 0 else 0.0
 
     
     def _sample_eviction_candidates(self, sample_size: int) -> list:
@@ -357,7 +415,7 @@ class TinyLFU:
             if len(self.ghost_cache) > self.ghost_cache_size:
                 self.ghost_cache.popitem(last=False)
     
-    def set(self, key: str, value: str, ttl: Optional[int] = None, category: Optional[str] = None):
+    def set(self, key: str, value: str, ttl: Optional[int] = None):
         """
         Set key-value in cache with optional TTL.
         Uses TinyLFU admission policy.
@@ -366,7 +424,6 @@ class TinyLFU:
             key: Cache key
             value: Cache value
             ttl: Optional TTL in seconds
-            category: Optional category/cluster identifier for doorkeeper bias application
         """
         if self.redis.exists(key):
             if ttl:
@@ -383,21 +440,29 @@ class TinyLFU:
             return
         
         cache_full = False
+        cache_fullness_pct = 0.0
         try:
             cache_info = self.redis.info("memory")
             used_memory = cache_info.get("used_memory", 0)
             max_memory = cache_info.get("maxmemory", 0)
             if max_memory > 0:
-                cache_full = (used_memory / max_memory) > 0.9
+                cache_fullness_pct = (used_memory / max_memory) * 100
+                cache_full = cache_fullness_pct > 90.0
         except:
             with self.lock:
                 cache_full = len(self.cache_order) >= self.max_cache_size
+                if self.max_cache_size > 0:
+                    cache_fullness_pct = (len(self.cache_order) / self.max_cache_size) * 100
         
         victim = None
         if cache_full:
             victim = self.get_eviction_victim()
+            if self.debug_logging:
+                print(f"[TinyLFU set] Cache FULL ({cache_fullness_pct:.1f}%), checking admission for key={key[:20]}, victim={victim[:20] if victim else 'None'}")
+        elif self.debug_logging:
+            print(f"[TinyLFU set] Cache NOT full ({cache_fullness_pct:.1f}%), auto-admitting key={key[:20]}")
         
-        if self.should_admit(key, victim, category=category):
+        if self.should_admit(key, victim):
             if victim and victim != key:
                 if self.redis.exists(victim):
                     self.evict(victim)
@@ -444,8 +509,16 @@ class TinyLFU:
     
     def apply_decay(self, factor: float):
         """
-        Apply decay factor to all Count-Min Sketch counters.
-        Scales down all frequency estimates by the given factor.
+        Apply decay factor to all Count-Min Sketch counters and reset the Doorkeeper.
+        
+        This creates a real difference from the Baseline:
+        - Sketch counters are scaled down → old items have reduced frequency
+        - Doorkeeper is cleared → all items get a "free pass" on next access
+        - Items accessed AFTER decay rebuild their frequency from a lower base
+        - Items NOT accessed after decay remain at reduced frequency
+        
+        Net effect: favors recently accessed items over old items.
+        Lower factor = more aggressive recency bias.
         
         Args:
             factor: Decay factor in [0.0, 1.0]. Values < 1.0 reduce frequencies.
@@ -459,13 +532,15 @@ class TinyLFU:
                     self.sketch.counters[i][j] = int(self.sketch.counters[i][j] * factor)
             
             self.sketch.total_additions = int(self.sketch.total_additions * factor)
+            self.doorkeeper.reset()
+            self.access_count = 0
             
             if not hasattr(self, 'decay_factor_applied'):
                 self.decay_factor_applied = None
             self.decay_factor_applied = factor
         
         TINYLFU_DECAY_APPLICATIONS.inc()
-        print(f"[TinyLFU] Applied decay factor {factor} to Count-Min Sketch")
+        print(f"[TinyLFU] Applied decay factor {factor}: sketch scaled, doorkeeper+access_count reset")
     
     def set_reset_interval(self, n: int):
         """
@@ -483,29 +558,25 @@ class TinyLFU:
         TINYLFU_RESET_INTERVAL_UPDATES.inc()
         print(f"[TinyLFU] Reset interval updated to {n}")
     
-    def set_doorkeeper_bias(self, category: str, delta: int):
+    def force_reset_sketch(self):
         """
-        Set admission bias for a specific category/cluster.
-        Positive values make items from this category more likely to be admitted.
-        Negative values make them less likely.
-        
-        Args:
-            category: Category or cluster identifier
-            delta: Bias value (positive = more likely, negative = less likely)
+        Force a complete reset of the Count-Min Sketch and Doorkeeper.
+        This completely zeros all frequency data, providing a fresh start.
+        Useful when workload changes drastically or sketch is saturated with stale patterns.
         """
         with self.lock:
-            if delta == 0:
-                self.doorkeeper_bias.pop(category, None)
-            else:
-                self.doorkeeper_bias[category] = delta
+            self.sketch.reset()
+            self.doorkeeper.reset()
+            self.access_count = 0
+            self.decay_factor_applied = None
         
-        print(f"[TinyLFU] Doorkeeper bias for '{category}' set to {delta}")
+        TINYLFU_RESETS.inc()
+        print(f"[TinyLFU] Force reset: Count-Min Sketch and Doorkeeper completely zeroed")
     
-    def clear_doorkeeper_bias(self):
-        """Clear all doorkeeper bias settings."""
+    def enable_debug_logging(self, enable: bool = True):
+        """Enable or disable detailed debug logging for admission decisions."""
         with self.lock:
-            self.doorkeeper_bias.clear()
-        print(f"[TinyLFU] All doorkeeper bias settings cleared")
+            self.debug_logging = enable
     
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics about TinyLFU state."""
@@ -518,7 +589,10 @@ class TinyLFU:
                 "doorkeeper_size": self.doorkeeper.size,
                 "eviction_count": self.eviction_count,
                 "ghost_hits": self.ghost_hits,
-                "doorkeeper_bias_count": len(self.doorkeeper_bias)
+                "admission_bias": self.admission_bias,
+                "should_admit_calls": self.should_admit_calls,
+                "should_admit_cache_full_calls": self.should_admit_cache_full_calls,
+                "should_admit_rejections": self.should_admit_rejections
             }
             if hasattr(self, 'decay_factor_applied') and self.decay_factor_applied is not None:
                 stats["decay_factor_applied"] = self.decay_factor_applied
