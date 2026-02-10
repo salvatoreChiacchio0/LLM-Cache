@@ -6,7 +6,7 @@ import signal
 from pathlib import Path
 from ..core.config import (
     KAFKA_TOPIC_STATS, KAFKA_TOPIC_PLAN,
-    USE_GROQ,
+    USE_GROQ, USE_PROMPT_SMALL,
     LLM_API_URL, LLM_MODEL, OLLAMA_HOST,
     OLLAMA_TIMEOUT_SEC, OLLAMA_NUM_PREDICT, OLLAMA_NUM_THREAD, OLLAMA_NUM_CTX,
     AURA_CACHE_LIMIT_BYTES,
@@ -768,10 +768,12 @@ def run_brain():
                         metrics_feedback = {}
                     metrics_feedback["reset_sketch_info"] = reset_info
                 
-                # if not USE_GROQ and _is_small_model(LLM_MODEL):  # Commentato per test locali - per groq cloud llm test
-                if _is_small_model(LLM_MODEL):
+                # Decide quale prompt usare
+                use_small = USE_PROMPT_SMALL and _is_small_model(LLM_MODEL)
+                
+                if use_small:
                     prompt = build_global_prompt_small(stats_json, last_policy_copy, metrics_feedback)
-                    print(f"Using SMALL prompt for model: {LLM_MODEL}")
+                    print(f"Using SMALL prompt for model: {LLM_MODEL} (USE_PROMPT_SMALL={USE_PROMPT_SMALL})")
                 else:
                     prompt = build_global_prompt(
                         stats_json,
@@ -782,6 +784,7 @@ def run_brain():
                         current_adaptation_state,
                         best_strategy_copy
                     )
+                    print(f"Using FULL prompt for model: {LLM_MODEL} (USE_PROMPT_SMALL={USE_PROMPT_SMALL})")
                 
                 params_applied = {}
                 if last_policy_copy and "tinylfu_control" in last_policy_copy:

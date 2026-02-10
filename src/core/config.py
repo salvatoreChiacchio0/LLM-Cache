@@ -9,6 +9,7 @@ OLLAMA_NUM_THREAD = int(os.getenv("OLLAMA_NUM_THREAD", "4"))
 OLLAMA_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "2048"))
 USE_GROQ = False
 USE_JSON_OBJECT_MODE = os.getenv("USE_JSON_OBJECT_MODE", "").lower() in ("true", "1", "yes")
+USE_PROMPT_SMALL = os.getenv("USE_PROMPT_SMALL", "").lower() not in ("false", "0", "no")
 FLUSH_ON_STARTUP = os.getenv("FLUSH_ON_STARTUP", "false").lower() in ("true", "1", "yes")
 KAFKA_TOPIC_PLAN = "aura-plan"
 KAFKA_TOPIC_STATS = "aura-stats"
