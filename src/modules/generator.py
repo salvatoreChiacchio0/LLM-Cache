@@ -9,10 +9,17 @@ class TrafficGenerator:
         self._check_file()
 
     def _check_file(self):
+        """Verifica che il file esista. Non fallisce se il file non esiste (verrà controllato quando usato)."""
         if not os.path.exists(self.log_file):
-            raise FileNotFoundError(f"Log file not found: {self.log_file}")
+            pass
 
     def generate_events(self, shutdown_event=None):
+        if not os.path.exists(self.log_file):
+            raise FileNotFoundError(
+                f"Log file not found: {self.log_file}\n"
+                f"Please use test files from data/test_data/ instead, or provide the log file."
+            )
+        
         while True:
             with open(self.log_file, "r", encoding=FILE_ENCODING, errors="ignore") as f:
                 print(f"[DEBUG] Generator opened log file: {self.log_file}")

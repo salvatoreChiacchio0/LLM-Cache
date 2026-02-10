@@ -183,6 +183,43 @@ def get_lru_cache_full_percent(r_lru, limit_bytes):
     except Exception:
         return 0.0
 
+def normalize_path(path_str: str) -> str:
+    """
+    Normalizza un percorso convertendo percorsi Docker in percorsi locali se necessario.
+    
+    Args:
+        path_str: Percorso da normalizzare (può essere Docker /app/data/... o locale)
+    
+    Returns:
+        Percorso normalizzato che funziona nell'ambiente corrente
+    """
+    if not path_str:
+        return path_str
+    
+    if path_str.startswith("/app/data/"):
+        local_path = path_str.replace("/app/data/", "data/")
+        local_path_obj = Path(local_path)
+        
+        if local_path_obj.exists():
+            return str(local_path_obj.resolve())
+        
+        project_root = Path(__file__).parent.parent.parent
+        project_path = project_root / local_path
+        if project_path.exists():
+            return str(project_path.resolve())
+    
+    path_obj = Path(path_str)
+    if path_obj.exists():
+        return str(path_obj.resolve())
+    
+    if path_str.startswith("/app/"):
+        local_equivalent = path_str.replace("/app/", "")
+        local_path_obj = Path(local_equivalent)
+        if local_path_obj.exists():
+            return str(local_path_obj.resolve())
+    
+    return path_str
+
 def run_streamer():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -233,6 +270,8 @@ def run_streamer():
             with open(test_config_file, 'r') as f:
                 test_config = json.load(f)
                 test_dataset = test_config.get("dataset_path")
+                if test_dataset:
+                    test_dataset = normalize_path(test_dataset)
                 max_events = test_config.get("max_events", max_events)
                 print(f"Loaded test config: {test_config.get('test_name', 'unknown')}")
         except Exception as e:
@@ -251,7 +290,43 @@ def run_streamer():
         else:
             generator = LimitedDatasetLoader(log_file=test_dataset, max_events=max_events if max_events > 0 else 100000)
     else:
-        generator = TrafficGenerator()
+        test_data_dir = Path("data/test_data")
+        default_test_files = [
+            "normal_dataset_100k.json",
+            "02_burst_cooldown_100k.json",
+            "04_daily_pattern_100k.json",
+            "01_hot_cold_shift_100k.json"
+        ]
+        
+        default_test = None
+        for test_file in default_test_files:
+            test_path = test_data_dir / test_file
+            if test_path.exists():
+                default_test = str(test_path)
+                print(f"No test config found, using default test file: {test_file}")
+                break
+        
+        if default_test:
+            generator = PreprocessedLoader(default_test)
+        else:
+            print(f"ERROR: No test configuration or test files found.")
+            print(f"  Available options:")
+            print(f"  1. Create data/current_test.json with test configuration")
+            print(f"  2. Set TEST_DATASET environment variable pointing to a test file")
+            print(f"  3. Place a test file in data/test_data/ (e.g., normal_dataset_100k.json)")
+            print(f"")
+            print(f"  Test files should be in data/test_data/ directory.")
+            print(f"  The log_15M_subset.txt file is optional and only used as last resort.")
+            
+            log_file = Path(LOG_FILE)
+            if log_file.exists():
+                print(f"  Falling back to log file: {LOG_FILE}")
+                generator = TrafficGenerator()
+            else:
+                raise FileNotFoundError(
+                    f"Cannot start streamer: no test files found in data/test_data/ and log file not available at {LOG_FILE}.\n"
+                    f"Please use test files from data/test_data/ instead."
+                )
     
     aggregator = ContextAggregator(max_events=4500, session_history_len=10, window_seconds=300)
 
@@ -337,8 +412,6 @@ def run_streamer():
                                 new_max_events = new_config.get("max_events", 0)
                                 
                                 if new_test_name != current_test_name and new_dataset:
-                                    # IMPORTANTE: Non passare al prossimo test se non abbiamo completato il test corrente
-                                    # (almeno 95% degli eventi devono essere processati)
                                     if max_events > 0 and events_processed < max_events * 0.95:
                                         print(f"WARNING: New test detected ({new_test_name}) but current test not complete ({events_processed}/{max_events}, {events_processed/max_events*100:.1f}%). Ignoring new test until current test completes.")
                                         break

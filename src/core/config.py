@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "ollama")
 LLM_API_URL = f"http://{OLLAMA_HOST}:11434/api/chat"
@@ -31,8 +32,21 @@ TINYLFU_SKETCH_DEPTH = int(os.getenv("TINYLFU_SKETCH_DEPTH", "4"))
 TINYLFU_DOORKEEPER_SIZE = int(os.getenv("TINYLFU_DOORKEEPER_SIZE", "8192"))
 TINYLFU_RESET_INTERVAL = int(os.getenv("TINYLFU_RESET_INTERVAL", "100000"))
 TINYLFU_SAMPLE_SIZE = int(os.getenv("TINYLFU_SAMPLE_SIZE", "10"))
-ITEM_METADATA_CACHE_SIZE = 10000
-LOG_FILE = "/app/data/log_15M_subset.txt"
+ITEM_METADATA_CACHE_SIZE = 10000 
+_log_file_env = os.getenv("LOG_FILE")
+if _log_file_env:
+    LOG_FILE = _log_file_env
+else:
+    docker_path = "/app/data/log_15M_subset.txt"
+    local_path = Path(__file__).parent.parent.parent / "data" / "log_15M_subset.txt"
+    
+    if os.path.exists(docker_path):
+        LOG_FILE = docker_path
+    elif local_path.exists():
+        LOG_FILE = str(local_path)
+    else:
+        LOG_FILE = docker_path
+
 LOG_DELIMITER = chr(1)
 FILE_ENCODING = "latin-1"
 VOLATILITY_HIGH = float(os.getenv("VOLATILITY_HIGH", "0.5"))
