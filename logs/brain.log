@@ -1,0 +1,1615 @@
+LLM backend: OLLAMA (local)
+OLLAMA_HOST: ollama
+OLLAMA_MODEL: gemma2:2b
+Ollama is active: 0.15.6
+Initializing Kafka Consumer/Producer...
+LLM Worker Thread started
+Connecting to Kafka topic aura-stats...
+Successfully connected to Kafka topic aura-stats
+Entering loop...
+Topic aura-stats not available yet, waiting...
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 93.6%
+DEBUG - Baseline: hits=470, misses=4530, HR=0.0940, delta=0.0000
+DEBUG - Aura: hits=483, misses=4517, HR=0.0966, delta=0.0000
+DEBUG: WindowHits[Aura: 483, Base: 470] -> DeltaHR[Aura: 0.000000, Base: 0.000000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.094000, Aura=0.096600, Diff=-0.002600
+Adaptation State: NORMAL (volatility=0.000, opportunity_loss=0.000000 (delta-based: 0.000000 - 0.000000))
+New Best Strategy: Improvement=0.0026, Volatility=0.000, Params={}
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Saved temporal metrics: LLM call #10, AURA HR=0.0966, Baseline HR=0.0940
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.8%
+DEBUG - Baseline: hits=211, misses=4789, HR=0.0422, delta=-0.0518
+DEBUG - Aura: hits=224, misses=4776, HR=0.0448, delta=-0.0518
+State transition: CacheAdaptationState.NORMAL → UNSTABLE (volatility=1.000 > 0.5)
+DEBUG: WindowHits[Aura: 224, Base: 211] -> DeltaHR[Aura: -0.051800, Base: -0.051800] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.042200, Aura=0.044800, Diff=-0.002600
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000000 (delta-based: -0.051800 - -0.051800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.8%
+DEBUG - Baseline: hits=159, misses=4841, HR=0.0318, delta=-0.0104
+DEBUG - Aura: hits=104, misses=4896, HR=0.0208, delta=-0.0240
+DEBUG: WindowHits[Aura: 104, Base: 159] -> DeltaHR[Aura: -0.024000, Base: -0.010400] -> OppLoss: 0.013600
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.013600 (delta-based: -0.010400 - -0.024000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.7%
+DEBUG - Baseline: hits=167, misses=4833, HR=0.0334, delta=0.0016
+DEBUG - Aura: hits=72, misses=4928, HR=0.0144, delta=-0.0064
+DEBUG: WindowHits[Aura: 72, Base: 167] -> DeltaHR[Aura: -0.006400, Base: 0.001600] -> OppLoss: 0.008000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.008000 (delta-based: 0.001600 - -0.006400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.6%
+DEBUG - Baseline: hits=177, misses=4823, HR=0.0354, delta=0.0020
+DEBUG - Aura: hits=66, misses=4934, HR=0.0132, delta=-0.0012
+DEBUG: WindowHits[Aura: 66, Base: 177] -> DeltaHR[Aura: -0.001200, Base: 0.002000] -> OppLoss: 0.003200
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.003200 (delta-based: 0.002000 - -0.001200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.8%
+DEBUG - Baseline: hits=109, misses=4891, HR=0.0218, delta=-0.0136
+DEBUG - Aura: hits=34, misses=4966, HR=0.0068, delta=-0.0064
+DEBUG: WindowHits[Aura: 34, Base: 109] -> DeltaHR[Aura: -0.006400, Base: -0.013600] -> OppLoss: -0.007200
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.007200 (delta-based: -0.013600 - -0.006400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.8%
+DEBUG - Baseline: hits=198, misses=4802, HR=0.0396, delta=0.0178
+DEBUG - Aura: hits=83, misses=4917, HR=0.0166, delta=0.0098
+DEBUG: WindowHits[Aura: 83, Base: 198] -> DeltaHR[Aura: 0.009800, Base: 0.017800] -> OppLoss: 0.008000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.008000 (delta-based: 0.017800 - 0.009800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.8%
+DEBUG - Baseline: hits=173, misses=4827, HR=0.0346, delta=-0.0050
+DEBUG - Aura: hits=117, misses=4883, HR=0.0234, delta=0.0068
+DEBUG: WindowHits[Aura: 117, Base: 173] -> DeltaHR[Aura: 0.006800, Base: -0.005000] -> OppLoss: -0.011800
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.011800 (delta-based: -0.005000 - 0.006800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.7%
+DEBUG - Baseline: hits=119, misses=4881, HR=0.0238, delta=-0.0108
+DEBUG - Aura: hits=31, misses=4969, HR=0.0062, delta=-0.0172
+DEBUG: WindowHits[Aura: 31, Base: 119] -> DeltaHR[Aura: -0.017200, Base: -0.010800] -> OppLoss: 0.006400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.006400 (delta-based: -0.010800 - -0.017200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.8%
+DEBUG - Baseline: hits=121, misses=4879, HR=0.0242, delta=0.0004
+DEBUG - Aura: hits=48, misses=4952, HR=0.0096, delta=0.0034
+DEBUG: WindowHits[Aura: 48, Base: 121] -> DeltaHR[Aura: 0.003400, Base: 0.000400] -> OppLoss: -0.003000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.003000 (delta-based: 0.000400 - 0.003400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 92.8%
+DEBUG - Baseline: hits=147, misses=4853, HR=0.0294, delta=0.0052
+DEBUG - Aura: hits=130, misses=4870, HR=0.0260, delta=0.0164
+DEBUG: WindowHits[Aura: 130, Base: 147] -> DeltaHR[Aura: 0.016400, Base: 0.005200] -> OppLoss: -0.011200
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.011200 (delta-based: 0.005200 - 0.016400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 96.2%
+DEBUG - Baseline: hits=65, misses=4935, HR=0.0130, delta=-0.0164
+DEBUG - Aura: hits=50, misses=4950, HR=0.0100, delta=-0.0160
+DEBUG: WindowHits[Aura: 50, Base: 65] -> DeltaHR[Aura: -0.016000, Base: -0.016400] -> OppLoss: -0.000400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.000400 (delta-based: -0.016400 - -0.016000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=53, misses=4947, HR=0.0106, delta=0.0000
+DEBUG - Aura: hits=53, misses=4947, HR=0.0106, delta=0.0000
+DEBUG: WindowHits[Aura: 53, Base: 53] -> DeltaHR[Aura: 0.000000, Base: 0.000000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.010600, Aura=0.010600, Diff=0.000000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000000 (delta-based: 0.000000 - 0.000000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=5, misses=4995, HR=0.0010, delta=-0.0096
+DEBUG - Aura: hits=5, misses=4995, HR=0.0010, delta=-0.0096
+DEBUG: WindowHits[Aura: 5, Base: 5] -> DeltaHR[Aura: -0.009600, Base: -0.009600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.001000, Aura=0.001000, Diff=0.000000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000000 (delta-based: -0.009600 - -0.009600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=22, misses=4978, HR=0.0044, delta=0.0034
+DEBUG - Aura: hits=17, misses=4983, HR=0.0034, delta=0.0024
+DEBUG: WindowHits[Aura: 17, Base: 22] -> DeltaHR[Aura: 0.002400, Base: 0.003400] -> OppLoss: 0.001000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.001000 (delta-based: 0.003400 - 0.002400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 43.25s (43251.11ms)
+LLM Reasoning: The current strategy is working well, and fine-tuning the admission bias around None seems promising.  Let's try a slightly higher value to see if we can further improve hit ratio. 
+TinyLFU parameter update: decay_factor=0.85, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #1, AURA HR=0.0448, Baseline HR=0.0422
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=45, misses=4955, HR=0.0090, delta=0.0046
+DEBUG - Aura: hits=45, misses=4955, HR=0.0090, delta=0.0056
+DEBUG: WindowHits[Aura: 45, Base: 45] -> DeltaHR[Aura: 0.005600, Base: 0.004600] -> OppLoss: -0.001000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.001000 (delta-based: 0.004600 - 0.005600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.08s (3075.27ms)
+LLM Reasoning: The current strategy is working well with a slight improvement in hit ratio.  We can fine-tune the admission bias to further optimize performance. We will try setting `admission_bias` to 0 and see if it leads to a significant improvement....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=0
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #2, AURA HR=0.0208, Baseline HR=0.0318
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=8, misses=4992, HR=0.0016, delta=-0.0074
+DEBUG - Aura: hits=7, misses=4993, HR=0.0014, delta=-0.0076
+DEBUG: WindowHits[Aura: 7, Base: 8] -> DeltaHR[Aura: -0.007600, Base: -0.007400] -> OppLoss: 0.000200
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000200 (delta-based: -0.007400 - -0.007600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=28, misses=4972, HR=0.0056, delta=0.0040
+DEBUG - Aura: hits=54, misses=4946, HR=0.0108, delta=0.0094
+DEBUG: WindowHits[Aura: 54, Base: 28] -> DeltaHR[Aura: 0.009400, Base: 0.004000] -> OppLoss: -0.005400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.005400 (delta-based: 0.004000 - 0.009400))
+New Best Strategy: Improvement=0.0052, Volatility=1.000, Params={'decay_factor': 0.8, 'reset_interval': 50000, 'reset_sketch': None, 'admission_bias': 0}
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.13s (3126.35ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We'll try a higher admission bias to allow for more frequent updates of the cache with new items. This will help in capturing changes in the workload and potentially improve hit ratio....
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #3, AURA HR=0.0144, Baseline HR=0.0334
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=8, misses=4992, HR=0.0016, delta=-0.0040
+DEBUG - Aura: hits=10, misses=4990, HR=0.0020, delta=-0.0088
+DEBUG: WindowHits[Aura: 10, Base: 8] -> DeltaHR[Aura: -0.008800, Base: -0.004000] -> OppLoss: 0.004800
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.004800 (delta-based: -0.004000 - -0.008800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.92s (2920.39ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We'll try a higher admission bias to allow for more frequent updates of the cache with new items. This will help in capturing changes faster and potentially improve hit ratio....
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #4, AURA HR=0.0132, Baseline HR=0.0354
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=73, misses=4927, HR=0.0146, delta=0.0130
+DEBUG - Aura: hits=75, misses=4925, HR=0.0150, delta=0.0130
+DEBUG: WindowHits[Aura: 75, Base: 73] -> DeltaHR[Aura: 0.013000, Base: 0.013000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.014600, Aura=0.015000, Diff=-0.000400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000000 (delta-based: 0.013000 - 0.013000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.05s (3045.28ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We need to increase the admission bias to allow for more new items to be admitted into the cache. A higher admission bias will help in capturing new patterns and potentially improve hit ratio. ...
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #5, AURA HR=0.0068, Baseline HR=0.0218
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=6, misses=4994, HR=0.0012, delta=-0.0134
+DEBUG - Aura: hits=6, misses=4994, HR=0.0012, delta=-0.0138
+DEBUG: WindowHits[Aura: 6, Base: 6] -> DeltaHR[Aura: -0.013800, Base: -0.013400] -> OppLoss: 0.000400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000400 (delta-based: -0.013400 - -0.013800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.19s (3191.24ms)
+LLM Reasoning: The baseline cache is performing better than Aura despite the volatility being high.  We'll try a higher admission bias to allow for more frequent updates of the cache with new items. This will help in capturing changes and potentially improve hit ratio....
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #6, AURA HR=0.0166, Baseline HR=0.0396
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=13, misses=4987, HR=0.0026, delta=0.0014
+DEBUG - Aura: hits=18, misses=4982, HR=0.0036, delta=0.0024
+DEBUG: WindowHits[Aura: 18, Base: 13] -> DeltaHR[Aura: 0.002400, Base: 0.001400] -> OppLoss: -0.001000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.001000 (delta-based: 0.001400 - 0.002400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.85s (2847.57ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We'll try a higher admission bias to allow for more frequent updates of the cache with new items. This will help in capturing changes and potentially outperforming the baseline....
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #7, AURA HR=0.0234, Baseline HR=0.0346
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=29, misses=4971, HR=0.0058, delta=0.0032
+DEBUG - Aura: hits=42, misses=4958, HR=0.0084, delta=0.0048
+DEBUG: WindowHits[Aura: 42, Base: 29] -> DeltaHR[Aura: 0.004800, Base: 0.003200] -> OppLoss: -0.001600
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.001600 (delta-based: 0.003200 - 0.004800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.00s (2999.42ms)
+LLM Reasoning: The baseline cache is performing better than Aura despite the volatility being high.  We need to increase the admission bias to allow for more new items to be admitted into the cache. This will help in capturing more frequent patterns and potentially improve hit ratio. ...
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #8, AURA HR=0.0062, Baseline HR=0.0238
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=18, misses=4982, HR=0.0036, delta=-0.0022
+DEBUG - Aura: hits=14, misses=4986, HR=0.0028, delta=-0.0056
+DEBUG: WindowHits[Aura: 14, Base: 18] -> DeltaHR[Aura: -0.005600, Base: -0.002200] -> OppLoss: 0.003400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.003400 (delta-based: -0.002200 - -0.005600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.72s (3716.78ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We need to increase the admission bias to allow for more new items to be admitted into the cache. This will help in capturing more frequent patterns and potentially improve hit ratio. A higher admission bias value allows for a faster adaptation to changing workloads, which could lead to better performance compared to the baseline....
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #9, AURA HR=0.0096, Baseline HR=0.0242
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=13, misses=4987, HR=0.0026, delta=-0.0010
+DEBUG - Aura: hits=8, misses=4992, HR=0.0016, delta=-0.0012
+DEBUG: WindowHits[Aura: 8, Base: 13] -> DeltaHR[Aura: -0.001200, Base: -0.001000] -> OppLoss: 0.000200
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000200 (delta-based: -0.001000 - -0.001200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=4, misses=4996, HR=0.0008, delta=-0.0018
+DEBUG - Aura: hits=6, misses=4994, HR=0.0012, delta=-0.0004
+DEBUG: WindowHits[Aura: 6, Base: 4] -> DeltaHR[Aura: -0.000400, Base: -0.001800] -> OppLoss: -0.001400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.001400 (delta-based: -0.001800 - -0.000400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.70s (3697.71ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We need to increase the admission bias to allow for more new items to be admitted into the cache. This will help in capturing more frequent patterns and potentially improve hit ratio. Additionally, we'll decrease the decay factor to reduce the impact of old data on the cache. ...
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #10, AURA HR=0.0260, Baseline HR=0.0294
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=1, misses=4999, HR=0.0002, delta=-0.0006
+DEBUG - Aura: hits=5, misses=4995, HR=0.0010, delta=-0.0002
+DEBUG: WindowHits[Aura: 5, Base: 1] -> DeltaHR[Aura: -0.000200, Base: -0.000600] -> OppLoss: -0.000400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.000400 (delta-based: -0.000600 - -0.000200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.67s (3666.53ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We need to increase the admission bias to allow for more new items to be admitted into the cache. This will help in capturing more frequent patterns and potentially improve hit ratio. A higher admission bias value (e.g., +2) allows for a faster adaptation to changing workloads....
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #11, AURA HR=0.0100, Baseline HR=0.0130
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=6, misses=4994, HR=0.0012, delta=0.0010
+DEBUG - Aura: hits=5, misses=4995, HR=0.0010, delta=0.0000
+DEBUG: WindowHits[Aura: 5, Base: 6] -> DeltaHR[Aura: 0.000000, Base: 0.001000] -> OppLoss: 0.001000
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.001000 (delta-based: 0.001000 - 0.000000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.00s (3000.63ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We'll try a higher admission bias to allow for more frequent updates of the cache with new items. This will help in capturing changes faster and potentially improve hit ratio....
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #12, AURA HR=0.0106, Baseline HR=0.0106
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=3, misses=4997, HR=0.0006, delta=-0.0006
+DEBUG - Aura: hits=8, misses=4992, HR=0.0016, delta=0.0006
+DEBUG: WindowHits[Aura: 8, Base: 3] -> DeltaHR[Aura: 0.000600, Base: -0.000600] -> OppLoss: -0.001200
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.001200 (delta-based: -0.000600 - 0.000600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.75s (3752.63ms)
+LLM Reasoning: The baseline cache is performing well with a stable hit ratio.  However, the volatility suggests that the cache needs to be more responsive to new patterns and items. Increasing the admission bias (+2) will allow for faster adaptation to changing workloads. Additionally, reducing the decay factor (0.90) will help prioritize frequently accessed items while still allowing for some frequency reduction....
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #13, AURA HR=0.0010, Baseline HR=0.0010
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=7, misses=4993, HR=0.0014, delta=0.0008
+DEBUG - Aura: hits=15, misses=4985, HR=0.0030, delta=0.0014
+DEBUG: WindowHits[Aura: 15, Base: 7] -> DeltaHR[Aura: 0.001400, Base: 0.000800] -> OppLoss: -0.000600
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=-0.000600 (delta-based: 0.000800 - 0.001400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.01s (3008.08ms)
+LLM Reasoning: The baseline cache is performing similarly to the current state.  We'll try a higher admission bias (+2) to allow for faster adaptation to new patterns in the volatile workload. This will help the Aura cache catch up and potentially outperform the baseline....
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #14, AURA HR=0.0034, Baseline HR=0.0044
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=1, misses=4999, HR=0.0002, delta=-0.0012
+DEBUG - Aura: hits=8, misses=4992, HR=0.0016, delta=-0.0014
+DEBUG: WindowHits[Aura: 8, Base: 1] -> DeltaHR[Aura: -0.001400, Base: -0.001200] -> OppLoss: 0.000200
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000200 (delta-based: -0.001200 - -0.001400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.77s (2770.30ms)
+LLM Reasoning: The baseline is performing better than Aura despite the volatility being high.  We'll try a higher admission bias to allow for more frequent new item admissions and potentially improve hit ratio. This will help in capturing new patterns faster....
+WARNING: LLM using same TinyLFU params for 3+ iterations
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #15, AURA HR=0.0090, Baseline HR=0.0090
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 2.54s (2537.14ms)
+LLM Reasoning: Increasing the negative bias could help by prioritizing less frequently used items.  A lower decay factor might also be beneficial to reduce the impact of recent accesses on the frequency calculation.
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #16, AURA HR=0.0014, Baseline HR=0.0016
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received test_complete signal for test: normal_dataset (final_events: 100000)
+Resetting brain state and waiting for new test...
+Brain state reset: cleared all adaptation history, strategies, and parameters.
+LLM Latency: 3.68s (3682.90ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 could help improve hit ratio by allowing more new items to be admitted into the cache. This is especially beneficial for volatile workloads where frequent changes in data access patterns occur.  A higher `admission_bias` encourages the cache to prioritize frequently accessed items, potentially leading to a better hit rate compared to the baseline's conservative approach....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+LLM Worker: Skipping task - test already completed. Waiting for new test...
+New test detected: burst_cooldown (was: normal_dataset). Resetting state and resuming processing...
+Brain state reset: cleared all adaptation history, strategies, and parameters.
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.4%
+DEBUG - Baseline: hits=0, misses=5000, HR=0.0000, delta=0.0000
+DEBUG - Aura: hits=7, misses=4993, HR=0.0014, delta=0.0000
+State transition: CacheAdaptationState.NORMAL → UNSTABLE (volatility=1.000 > 0.5)
+DEBUG: WindowHits[Aura: 7, Base: 0] -> DeltaHR[Aura: 0.000000, Base: 0.000000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.000000, Aura=0.001400, Diff=-0.001400
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000000 (delta-based: 0.000000 - 0.000000))
+New Best Strategy: Improvement=0.0014, Volatility=1.000, Params={}
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Saved temporal metrics: LLM call #17, AURA HR=0.0014, Baseline HR=0.0000
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 96.2%
+DEBUG - Baseline: hits=49, misses=4951, HR=0.0098, delta=0.0098
+DEBUG - Aura: hits=61, misses=4939, HR=0.0122, delta=0.0108
+DEBUG: WindowHits[Aura: 61, Base: 49] -> DeltaHR[Aura: 0.010800, Base: 0.009800] -> OppLoss: -0.001000
+Adaptation State: UNSTABLE (volatility=0.598, opportunity_loss=-0.001000 (delta-based: 0.009800 - 0.010800))
+New Best Strategy: Improvement=0.0024, Volatility=0.598, Params={}
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.02s (3015.16ms)
+LLM Reasoning: The current strategy is working well with the existing parameters.  Fine-tuning admission_bias to a value around 0 (or None) could potentially further improve hit ratio by allowing for more frequent admissions of new items while maintaining a stable cache size....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=0
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #18, AURA HR=0.0122, Baseline HR=0.0098
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 96.2%
+DEBUG - Baseline: hits=62, misses=4938, HR=0.0124, delta=0.0026
+DEBUG - Aura: hits=63, misses=4937, HR=0.0126, delta=0.0004
+State transition: UNSTABLE → RECOVERY (volatility decreased to 0.296)
+DEBUG: WindowHits[Aura: 63, Base: 62] -> DeltaHR[Aura: 0.000400, Base: 0.002600] -> OppLoss: 0.002200
+Adaptation State: RECOVERY (volatility=0.296, opportunity_loss=0.002200 (delta-based: 0.002600 - 0.000400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.14s (3144.36ms)
+LLM Reasoning: The current strategy is showing positive improvement with the baseline hit ratio already at 0.0122.  Fine-tuning admission_bias to a value of None could further improve the Aura HR by allowing for more frequent admissions of new items, especially in volatile workloads. ...
+TinyLFU parameter update: decay_factor=0.85, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #1, AURA HR=0.0126, Baseline HR=0.0124
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=58, misses=4942, HR=0.0116, delta=-0.0008
+DEBUG - Aura: hits=58, misses=4942, HR=0.0116, delta=-0.0010
+State remains RECOVERY (volatility history: [0.29610823958650045, 0.22400907979745066])
+DEBUG: WindowHits[Aura: 58, Base: 58] -> DeltaHR[Aura: -0.001000, Base: -0.000800] -> OppLoss: 0.000200
+Adaptation State: RECOVERY (volatility=0.224, opportunity_loss=0.000200 (delta-based: -0.000800 - -0.001000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.50s (3499.30ms)
+LLM Reasoning: The current strategy is showing positive improvement with the admission bias set to 0.  We can fine-tune this parameter further by trying a slightly higher or lower value. We will try a bias of 1 and see if it leads to better performance....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #2, AURA HR=0.0116, Baseline HR=0.0116
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=59, misses=4941, HR=0.0118, delta=0.0002
+DEBUG - Aura: hits=59, misses=4941, HR=0.0118, delta=0.0002
+State remains RECOVERY (volatility history: [0.22400907979745066, 0.21535321614326156])
+DEBUG: WindowHits[Aura: 59, Base: 59] -> DeltaHR[Aura: 0.000200, Base: 0.000200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.011800, Aura=0.011800, Diff=0.000000
+Adaptation State: RECOVERY (volatility=0.215, opportunity_loss=0.000000 (delta-based: 0.000200 - 0.000200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.77s (2773.42ms)
+LLM Reasoning: Increasing the admission bias to 1 could help by allowing more new items to be admitted into the cache, potentially leading to a higher hit ratio.  This is especially beneficial for volatile workloads where frequent changes in data access patterns occur....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #3, AURA HR=0.0118, Baseline HR=0.0118
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=40, misses=4960, HR=0.0080, delta=-0.0038
+DEBUG - Aura: hits=40, misses=4960, HR=0.0080, delta=-0.0038
+State remains RECOVERY (volatility history: [0.21535321614326156, 0.23144720606381108])
+DEBUG: WindowHits[Aura: 40, Base: 40] -> DeltaHR[Aura: -0.003800, Base: -0.003800] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.008000, Aura=0.008000, Diff=0.000000
+Adaptation State: RECOVERY (volatility=0.231, opportunity_loss=0.000000 (delta-based: -0.003800 - -0.003800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.90s (2896.20ms)
+LLM Reasoning: While the current parameters showed some improvement, a negative bias might help in prioritizing less frequently used items.  A lower decay factor could also be beneficial to reduce the impact of recent accesses on the cache's overall frequency....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #4, AURA HR=0.0080, Baseline HR=0.0080
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=45, misses=4955, HR=0.0090, delta=0.0010
+DEBUG - Aura: hits=44, misses=4956, HR=0.0088, delta=0.0008
+State remains RECOVERY (volatility history: [0.23144720606381108, 0.2678175825363376])
+DEBUG: WindowHits[Aura: 44, Base: 45] -> DeltaHR[Aura: 0.000800, Base: 0.001000] -> OppLoss: 0.000200
+Adaptation State: RECOVERY (volatility=0.268, opportunity_loss=0.000200 (delta-based: 0.001000 - 0.000800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.54s (3535.56ms)
+LLM Reasoning: Increasing the `decay_factor` could help by reducing the impact of older items on the cache's frequency.  A lower decay factor might allow for more frequent evictions and thus a higher hit ratio. Additionally, trying a negative `admission_bias` could potentially favor keeping popular items longer, leading to better performance in stable workloads....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #5, AURA HR=0.0088, Baseline HR=0.0090
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=45, misses=4955, HR=0.0090, delta=0.0000
+DEBUG - Aura: hits=45, misses=4955, HR=0.0090, delta=0.0002
+State remains RECOVERY (volatility history: [0.2678175825363376, 0.1891797294932373])
+DEBUG: WindowHits[Aura: 45, Base: 45] -> DeltaHR[Aura: 0.000200, Base: 0.000000] -> OppLoss: -0.000200
+Adaptation State: RECOVERY (volatility=0.189, opportunity_loss=-0.000200 (delta-based: 0.000000 - 0.000200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.32s (3318.93ms)
+LLM Reasoning: The previous attempt with `admission_bias=-1` didn't yield a significant improvement.  We can try increasing the admission bias to favor more frequent items. A higher `admission_bias` will allow for more new items to be admitted, potentially leading to better performance in volatile workloads....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #6, AURA HR=0.0090, Baseline HR=0.0090
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=41, misses=4959, HR=0.0082, delta=-0.0008
+DEBUG - Aura: hits=42, misses=4958, HR=0.0084, delta=-0.0006
+State remains RECOVERY (volatility history: [0.1891797294932373, 0.181631524915107])
+DEBUG: WindowHits[Aura: 42, Base: 41] -> DeltaHR[Aura: -0.000600, Base: -0.000800] -> OppLoss: -0.000200
+Adaptation State: RECOVERY (volatility=0.182, opportunity_loss=-0.000200 (delta-based: -0.000800 - -0.000600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=51, misses=4949, HR=0.0102, delta=0.0020
+DEBUG - Aura: hits=51, misses=4949, HR=0.0102, delta=0.0018
+State remains RECOVERY (volatility history: [0.181631524915107, 0.1968810916179337])
+DEBUG: WindowHits[Aura: 51, Base: 51] -> DeltaHR[Aura: 0.001800, Base: 0.002000] -> OppLoss: 0.000200
+Adaptation State: RECOVERY (volatility=0.197, opportunity_loss=0.000200 (delta-based: 0.002000 - 0.001800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.32s (3319.11ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 could help by prioritizing more frequent items in the cache. This is especially beneficial for volatile workloads where new items are constantly being introduced.  A higher `admission_bias` will give a greater weight to newly accessed items, potentially leading to better hit ratios compared to the baseline....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #7, AURA HR=0.0084, Baseline HR=0.0082
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4447
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=42, misses=4958, HR=0.0084, delta=-0.0018
+DEBUG - Aura: hits=42, misses=4958, HR=0.0084, delta=-0.0018
+State remains RECOVERY (volatility history: [0.1968810916179337, 0.24780701754385964])
+DEBUG: WindowHits[Aura: 42, Base: 42] -> DeltaHR[Aura: -0.001800, Base: -0.001800] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.008400, Aura=0.008400, Diff=0.000000
+Adaptation State: RECOVERY (volatility=0.248, opportunity_loss=0.000000 (delta-based: -0.001800 - -0.001800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.66s (2657.58ms)
+LLM Reasoning: The current strategy is working well, but fine-tuning the admission bias could further improve performance.  Let's try increasing the bias to 2 and see if it leads to a significant improvement in hit ratio....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #8, AURA HR=0.0102, Baseline HR=0.0102
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4013
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=32, misses=4968, HR=0.0064, delta=-0.0020
+DEBUG - Aura: hits=31, misses=4969, HR=0.0062, delta=-0.0022
+State remains RECOVERY (volatility history: [0.24780701754385964, 0.2666666666666667])
+DEBUG: WindowHits[Aura: 31, Base: 32] -> DeltaHR[Aura: -0.002200, Base: -0.002000] -> OppLoss: 0.000200
+Adaptation State: RECOVERY (volatility=0.267, opportunity_loss=0.000200 (delta-based: -0.002000 - -0.002200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.90s (2902.59ms)
+LLM Reasoning: While the current bias of 1 didn't yield a significant improvement, we can try a negative bias to prioritize keeping popular items longer.  A lower decay factor might also help in reducing the impact of less frequently used items....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #9, AURA HR=0.0084, Baseline HR=0.0084
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 3758
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=26, misses=4974, HR=0.0052, delta=-0.0012
+DEBUG - Aura: hits=26, misses=4974, HR=0.0052, delta=-0.0010
+State remains RECOVERY (volatility history: [0.2666666666666667, 0.35607692307692307])
+DEBUG: WindowHits[Aura: 26, Base: 26] -> DeltaHR[Aura: -0.001000, Base: -0.001200] -> OppLoss: -0.000200
+Adaptation State: RECOVERY (volatility=0.356, opportunity_loss=-0.000200 (delta-based: -0.001200 - -0.001000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.22s (3217.05ms)
+LLM Reasoning: The previous attempt with `admission_bias=1` didn't yield a significant improvement.  We'll try a negative bias to favor keeping popular items longer and see if that helps. A lower decay factor might also help in this case, as it would prioritize the most frequently used items....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #10, AURA HR=0.0062, Baseline HR=0.0064
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 3306
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=26, misses=4974, HR=0.0052, delta=0.0000
+DEBUG - Aura: hits=26, misses=4974, HR=0.0052, delta=0.0000
+State remains RECOVERY (volatility history: [0.35607692307692307, 0.40151232262882747])
+DEBUG: WindowHits[Aura: 26, Base: 26] -> DeltaHR[Aura: 0.000000, Base: 0.000000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.005200, Aura=0.005200, Diff=0.000000
+Adaptation State: RECOVERY (volatility=0.402, opportunity_loss=0.000000 (delta-based: 0.000000 - 0.000000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.96s (2964.52ms)
+LLM Reasoning: The previous attempt with a positive bias didn't yield significant improvement.  We'll try a negative bias to see if it helps prioritize the less frequently used items. A lower decay factor might also help in this case....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #11, AURA HR=0.0052, Baseline HR=0.0052
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 2936
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=29, misses=4971, HR=0.0058, delta=0.0006
+DEBUG - Aura: hits=29, misses=4971, HR=0.0058, delta=0.0006
+State transition: CacheAdaptationState.RECOVERY → UNSTABLE (volatility=0.502 > 0.5)
+DEBUG: WindowHits[Aura: 29, Base: 29] -> DeltaHR[Aura: 0.000600, Base: 0.000600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.005800, Aura=0.005800, Diff=0.000000
+Adaptation State: UNSTABLE (volatility=0.502, opportunity_loss=0.000000 (delta-based: 0.000600 - 0.000600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.94s (3940.83ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 will prioritize admitting more new items with higher frequency, potentially leading to a better hit ratio.  This is because it encourages the cache to hold more frequently used items, even if they are not in the most recent set of hits. This could help improve the Aura's hit ratio by increasing the likelihood of finding requested data quickly....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #12, AURA HR=0.0052, Baseline HR=0.0052
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 2410
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=13, misses=4987, HR=0.0026, delta=-0.0032
+DEBUG - Aura: hits=13, misses=4987, HR=0.0026, delta=-0.0032
+State transition: UNSTABLE → RECOVERY (volatility decreased to 0.496)
+DEBUG: WindowHits[Aura: 13, Base: 13] -> DeltaHR[Aura: -0.003200, Base: -0.003200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.002600, Aura=0.002600, Diff=0.000000
+Adaptation State: RECOVERY (volatility=0.496, opportunity_loss=0.000000 (delta-based: -0.003200 - -0.003200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.06s (3059.01ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.95 might help as it reduces the impact of older items on the cache's overall hit ratio. This could potentially lead to a more balanced approach where newer items are prioritized while still maintaining some consideration for existing popular items....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #13, AURA HR=0.0058, Baseline HR=0.0058
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 2149
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=34, misses=4966, HR=0.0068, delta=0.0042
+DEBUG - Aura: hits=34, misses=4966, HR=0.0068, delta=0.0042
+State transition: CacheAdaptationState.RECOVERY → UNSTABLE (volatility=0.709 > 0.5)
+DEBUG: WindowHits[Aura: 34, Base: 34] -> DeltaHR[Aura: 0.004200, Base: 0.004200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.006800, Aura=0.006800, Diff=0.000000
+Adaptation State: UNSTABLE (volatility=0.709, opportunity_loss=0.000000 (delta-based: 0.004200 - 0.004200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.46s (3456.63ms)
+LLM Reasoning: Increasing the `admission_bias` to 2 aims to prioritize more new items in the cache. This is particularly beneficial for volatile workloads where frequent updates are expected.  A higher `admission_bias` encourages the cache to accept more frequently accessed items, potentially leading to a higher hit ratio compared to the baseline. ...
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=2
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #14, AURA HR=0.0026, Baseline HR=0.0026
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 1937
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=12, misses=4988, HR=0.0024, delta=-0.0044
+DEBUG - Aura: hits=13, misses=4987, HR=0.0026, delta=-0.0042
+DEBUG: WindowHits[Aura: 13, Base: 12] -> DeltaHR[Aura: -0.004200, Base: -0.004400] -> OppLoss: -0.000200
+Adaptation State: UNSTABLE (volatility=0.712, opportunity_loss=-0.000200 (delta-based: -0.004400 - -0.004200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 1501
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=25, misses=4975, HR=0.0050, delta=0.0026
+DEBUG - Aura: hits=25, misses=4975, HR=0.0050, delta=0.0024
+DEBUG: WindowHits[Aura: 25, Base: 25] -> DeltaHR[Aura: 0.002400, Base: 0.002600] -> OppLoss: 0.000200
+Adaptation State: UNSTABLE (volatility=0.864, opportunity_loss=0.000200 (delta-based: 0.002600 - 0.002400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.19s (3188.05ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.95 might help as it reduces the impact of older items on the cache's frequency. This could potentially lead to a more aggressive admission policy for new items, especially when dealing with volatile workloads....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #15, AURA HR=0.0068, Baseline HR=0.0068
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 4.03s (4032.87ms)
+LLM Reasoning: While the current parameters haven't shown significant improvement, a negative bias might help in this case.  A lower admission bias could prioritize keeping popular items longer, potentially leading to better hit ratios for stable workloads. Additionally, a slightly lower decay factor (0.8) may reduce the impact of frequent access and allow more time for less frequently accessed items to be kept in the cache....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #16, AURA HR=0.0026, Baseline HR=0.0024
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 3.23s (3232.54ms)
+LLM Reasoning: The current strategy seems to be working well with a slight improvement in hit ratio.  We can fine-tune the admission bias by trying values like 3 or 1. These adjustments will impact how many new items are admitted into the cache, potentially leading to better performance for specific workloads....
+TinyLFU parameter update: decay_factor=0.85, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #17, AURA HR=0.0050, Baseline HR=0.0050
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received test_complete signal for test: burst_cooldown (final_events: 100000)
+Resetting brain state and waiting for new test...
+Brain state reset: cleared all adaptation history, strategies, and parameters.
+LLM Latency: 2.98s (2984.65ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.95 might help as it reduces the impact of older items and allows for more frequent evictions. This could potentially lead to a higher hit ratio by favoring newer items with higher frequency....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-2
+Producing Plan to Kafka...
+New test detected: daily_pattern (was: burst_cooldown). Resetting state and resuming processing...
+Brain state reset: cleared all adaptation history, strategies, and parameters.
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.4%
+DEBUG - Baseline: hits=264, misses=4736, HR=0.0528, delta=0.0000
+DEBUG - Aura: hits=291, misses=4709, HR=0.0582, delta=0.0000
+DEBUG: WindowHits[Aura: 291, Base: 264] -> DeltaHR[Aura: 0.000000, Base: 0.000000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.052800, Aura=0.058200, Diff=-0.005400
+Adaptation State: NORMAL (volatility=0.000, opportunity_loss=0.000000 (delta-based: 0.000000 - 0.000000))
+New Best Strategy: Improvement=0.0054, Volatility=0.000, Params={}
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Saved temporal metrics: LLM call #18, AURA HR=0.0582, Baseline HR=0.0528
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.4%
+DEBUG - Baseline: hits=197, misses=4803, HR=0.0394, delta=-0.0134
+DEBUG - Aura: hits=197, misses=4803, HR=0.0394, delta=-0.0188
+DEBUG: WindowHits[Aura: 197, Base: 197] -> DeltaHR[Aura: -0.018800, Base: -0.013400] -> OppLoss: 0.005400
+Adaptation State: NORMAL (volatility=0.377, opportunity_loss=0.005400 (delta-based: -0.013400 - -0.018800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.89s (2887.53ms)
+LLM Reasoning: The current strategy is working well with a slight improvement in hit ratio.  Fine-tuning the admission bias to None or -1 could potentially further improve performance by allowing for more frequent evictions of less frequently used items....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #19, AURA HR=0.0394, Baseline HR=0.0394
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 96.2%
+DEBUG - Baseline: hits=241, misses=4759, HR=0.0482, delta=0.0088
+DEBUG - Aura: hits=241, misses=4759, HR=0.0482, delta=0.0088
+DEBUG: WindowHits[Aura: 241, Base: 241] -> DeltaHR[Aura: 0.008800, Base: 0.008800] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.048200, Aura=0.048200, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.160, opportunity_loss=0.000000 (delta-based: 0.008800 - 0.008800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.09s (3091.54ms)
+LLM Reasoning: The baseline cache is performing well with a stable hit ratio.  We'll try a negative admission bias to prioritize the most popular items and see if that improves performance. This will help us understand how much of an impact the current parameters have on the cache behavior....
+TinyLFU parameter update: decay_factor=0.9, reset_interval=100000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #1, AURA HR=0.0482, Baseline HR=0.0482
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=233, misses=4767, HR=0.0466, delta=-0.0016
+DEBUG - Aura: hits=233, misses=4767, HR=0.0466, delta=-0.0016
+DEBUG: WindowHits[Aura: 233, Base: 233] -> DeltaHR[Aura: -0.001600, Base: -0.001600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.046600, Aura=0.046600, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.071, opportunity_loss=0.000000 (delta-based: -0.001600 - -0.001600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.85s (3848.80ms)
+LLM Reasoning: While -1 didn't work, a positive bias might help in this case.  A higher admission bias could potentially increase the likelihood of new items being admitted to the cache, especially if they are frequently accessed. Additionally, a lower decay factor (0.95) may be beneficial as it reduces the impact of old items on the cache's overall hit ratio....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #2, AURA HR=0.0466, Baseline HR=0.0466
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=207, misses=4793, HR=0.0414, delta=-0.0052
+DEBUG - Aura: hits=207, misses=4793, HR=0.0414, delta=-0.0052
+DEBUG: WindowHits[Aura: 207, Base: 207] -> DeltaHR[Aura: -0.005200, Base: -0.005200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.041400, Aura=0.041400, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.087, opportunity_loss=0.000000 (delta-based: -0.005200 - -0.005200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.89s (2891.67ms)
+LLM Reasoning: Increasing the admission bias to 1 could help by allowing more new items to be admitted into the cache, potentially leading to a higher hit ratio. This is because a higher admission bias would prioritize newer items over older ones, especially in volatile workloads where frequent updates occur....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #3, AURA HR=0.0414, Baseline HR=0.0414
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=243, misses=4757, HR=0.0486, delta=0.0072
+DEBUG - Aura: hits=243, misses=4757, HR=0.0486, delta=0.0072
+DEBUG: WindowHits[Aura: 243, Base: 243] -> DeltaHR[Aura: 0.007200, Base: 0.007200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.048600, Aura=0.048600, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.162, opportunity_loss=0.000000 (delta-based: 0.007200 - 0.007200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.68s (2676.11ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.8 could help reduce the impact of frequently accessed items and potentially improve hit ratio by allowing for more efficient eviction of less-used data.
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #4, AURA HR=0.0486, Baseline HR=0.0486
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=310, misses=4690, HR=0.0620, delta=0.0134
+DEBUG - Aura: hits=310, misses=4690, HR=0.0620, delta=0.0134
+DEBUG: WindowHits[Aura: 310, Base: 310] -> DeltaHR[Aura: 0.013400, Base: 0.013400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.062000, Aura=0.062000, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.106, opportunity_loss=0.000000 (delta-based: 0.013400 - 0.013400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.67s (3673.94ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.95 might help as it allows for a more aggressive reduction of frequencies, potentially leading to better performance in volatile workloads.  A higher decay factor can also lead to faster eviction of less frequently used items, which could improve hit ratio by allowing the cache to prioritize more frequently accessed data....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #5, AURA HR=0.0620, Baseline HR=0.0620
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=334, misses=4666, HR=0.0668, delta=0.0048
+DEBUG - Aura: hits=334, misses=4666, HR=0.0668, delta=0.0048
+DEBUG: WindowHits[Aura: 334, Base: 334] -> DeltaHR[Aura: 0.004800, Base: 0.004800] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.066800, Aura=0.066800, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.089, opportunity_loss=0.000000 (delta-based: 0.004800 - 0.004800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=267, misses=4733, HR=0.0534, delta=-0.0134
+DEBUG - Aura: hits=267, misses=4733, HR=0.0534, delta=-0.0134
+DEBUG: WindowHits[Aura: 267, Base: 267] -> DeltaHR[Aura: -0.013400, Base: -0.013400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.053400, Aura=0.053400, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.125, opportunity_loss=0.000000 (delta-based: -0.013400 - -0.013400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.47s (3468.20ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.95 might help as it allows for a more aggressive reduction of frequencies, potentially leading to better performance in volatile workloads.  Additionally, setting `admission_bias` to 1 could allow for a higher admission rate of new items, especially if the workload is changing frequently....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #6, AURA HR=0.0668, Baseline HR=0.0668
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=45, misses=4955, HR=0.0090, delta=-0.0444
+DEBUG - Aura: hits=45, misses=4955, HR=0.0090, delta=-0.0444
+DEBUG: WindowHits[Aura: 45, Base: 45] -> DeltaHR[Aura: -0.044400, Base: -0.044400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.009000, Aura=0.009000, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.402, opportunity_loss=0.000000 (delta-based: -0.044400 - -0.044400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.93s (2930.39ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.8 might help as it reduces the impact of older items on the cache's frequency. This could potentially favor more frequent access and thus improve hit ratio.
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #7, AURA HR=0.0534, Baseline HR=0.0534
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=24, misses=4976, HR=0.0048, delta=-0.0042
+DEBUG - Aura: hits=23, misses=4977, HR=0.0046, delta=-0.0044
+DEBUG: WindowHits[Aura: 23, Base: 24] -> DeltaHR[Aura: -0.004400, Base: -0.004200] -> OppLoss: 0.000200
+Adaptation State: NORMAL (volatility=0.268, opportunity_loss=0.000200 (delta-based: -0.004200 - -0.004400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.44s (3440.20ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 could help by prioritizing more frequent items in the cache. This is especially beneficial for volatile workloads where new items are constantly being introduced.  A higher `admission_bias` will give a greater weight to newly accessed items, potentially leading to better hit ratios compared to the baseline....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #8, AURA HR=0.0090, Baseline HR=0.0090
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=13, misses=4987, HR=0.0026, delta=-0.0022
+DEBUG - Aura: hits=13, misses=4987, HR=0.0026, delta=-0.0020
+DEBUG: WindowHits[Aura: 13, Base: 13] -> DeltaHR[Aura: -0.002000, Base: -0.002200] -> OppLoss: -0.000200
+Adaptation State: NORMAL (volatility=0.174, opportunity_loss=-0.000200 (delta-based: -0.002200 - -0.002000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.76s (3760.78ms)
+LLM Reasoning: The current baseline is already performing well with a high hit ratio.  To improve the Aura's performance, we need to focus on admission bias and decay factor. A negative bias will prioritize keeping popular items longer, potentially leading to better hit ratios for stable workloads. Additionally, a lower decay factor might help reduce the impact of less frequently used items, allowing more space for frequently accessed data....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #9, AURA HR=0.0046, Baseline HR=0.0048
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=7, misses=4993, HR=0.0014, delta=-0.0012
+DEBUG - Aura: hits=7, misses=4993, HR=0.0014, delta=-0.0012
+DEBUG: WindowHits[Aura: 7, Base: 7] -> DeltaHR[Aura: -0.001200, Base: -0.001200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.001400, Aura=0.001400, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.357, opportunity_loss=0.000000 (delta-based: -0.001200 - -0.001200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.41s (3409.33ms)
+LLM Reasoning: The previous attempt with `admission_bias=-1` didn't yield a significant improvement.  We need to explore the opposite end of the spectrum by increasing the admission bias. A higher `admission_bias` will prioritize more frequent items, potentially leading to better performance in volatile workloads....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #10, AURA HR=0.0026, Baseline HR=0.0026
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=30, misses=4970, HR=0.0060, delta=0.0046
+DEBUG - Aura: hits=30, misses=4970, HR=0.0060, delta=0.0046
+DEBUG: WindowHits[Aura: 30, Base: 30] -> DeltaHR[Aura: 0.004600, Base: 0.004600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.006000, Aura=0.006000, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.311, opportunity_loss=0.000000 (delta-based: 0.004600 - 0.004600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.12s (3116.89ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.95 might help as it reduces the impact of old items and allows for more frequent evictions. This could potentially lead to a higher hit ratio by favoring newer items that are more likely to be accessed frequently....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #11, AURA HR=0.0014, Baseline HR=0.0014
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=20, misses=4980, HR=0.0040, delta=-0.0020
+DEBUG - Aura: hits=20, misses=4980, HR=0.0040, delta=-0.0020
+DEBUG: WindowHits[Aura: 20, Base: 20] -> DeltaHR[Aura: -0.002000, Base: -0.002000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.004000, Aura=0.004000, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.452, opportunity_loss=0.000000 (delta-based: -0.002000 - -0.002000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=14, misses=4986, HR=0.0028, delta=-0.0012
+DEBUG - Aura: hits=14, misses=4986, HR=0.0028, delta=-0.0012
+DEBUG: WindowHits[Aura: 14, Base: 14] -> DeltaHR[Aura: -0.001200, Base: -0.001200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.002800, Aura=0.002800, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.449, opportunity_loss=0.000000 (delta-based: -0.001200 - -0.001200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.29s (3291.52ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 could help by favoring more frequent items in the cache. This is especially beneficial for volatile workloads where new items are constantly being introduced.  A higher `admission_bias` will prioritize these new items, potentially leading to a better hit ratio compared to the baseline....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #12, AURA HR=0.0060, Baseline HR=0.0060
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4115
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=16, misses=4984, HR=0.0032, delta=0.0004
+DEBUG - Aura: hits=16, misses=4984, HR=0.0032, delta=0.0004
+DEBUG: WindowHits[Aura: 16, Base: 16] -> DeltaHR[Aura: 0.000400, Base: 0.000400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.003200, Aura=0.003200, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.393, opportunity_loss=0.000000 (delta-based: 0.000400 - 0.000400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.02s (3017.01ms)
+LLM Reasoning: While the current parameters haven't shown significant improvement, a negative bias might help prioritize less frequently used items.  A lower decay factor could also be beneficial to reduce the impact of recent accesses on the cache hit ratio....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #13, AURA HR=0.0040, Baseline HR=0.0040
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 3708
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=9, misses=4991, HR=0.0018, delta=-0.0014
+DEBUG - Aura: hits=9, misses=4991, HR=0.0018, delta=-0.0014
+DEBUG: WindowHits[Aura: 9, Base: 9] -> DeltaHR[Aura: -0.001400, Base: -0.001400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.001800, Aura=0.001800, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.433, opportunity_loss=0.000000 (delta-based: -0.001400 - -0.001400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.09s (3085.30ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 will prioritize keeping popular items longer, potentially improving hit ratio by reducing evictions and allowing more frequent access to frequently used data.  This is a strategy that might work well for stable workloads where maintaining existing hits is crucial....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #14, AURA HR=0.0028, Baseline HR=0.0028
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 3339
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=8, misses=4992, HR=0.0016, delta=-0.0002
+DEBUG - Aura: hits=8, misses=4992, HR=0.0016, delta=-0.0002
+DEBUG: WindowHits[Aura: 8, Base: 8] -> DeltaHR[Aura: -0.000200, Base: -0.000200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.001600, Aura=0.001600, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.318, opportunity_loss=0.000000 (delta-based: -0.000200 - -0.000200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.42s (3416.75ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 could help by favoring more frequent items in the cache. This is especially beneficial for volatile workloads where new items are frequently added and old ones need to be evicted.  A higher `admission_bias` will prioritize these new items, potentially leading to a better hit ratio compared to the baseline....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #15, AURA HR=0.0032, Baseline HR=0.0032
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 2.98s (2978.86ms)
+LLM Reasoning: Increasing the `decay_factor` to 0.8 might help as it reduces the impact of older items on the cache's frequency. This could potentially lead to a more aggressive admission policy and improve hit ratio by favoring newer items....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #16, AURA HR=0.0018, Baseline HR=0.0018
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 3.06s (3059.44ms)
+LLM Reasoning: Increasing the `admission_bias` to 1 will prioritize keeping popular items longer, potentially improving hit ratio by reducing evictions and allowing more frequent access to frequently used data. This is a strategy that works well for stable workloads where maintaining existing cache hits is crucial....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=1
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #17, AURA HR=0.0016, Baseline HR=0.0016
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received test_complete signal for test: daily_pattern (final_events: 100000)
+Resetting brain state and waiting for new test...
+Brain state reset: cleared all adaptation history, strategies, and parameters.
+LLM Latency: 3.61s (3605.01ms)
+LLM Reasoning: The current parameters are not showing significant improvement.  I'm going to try a negative admission bias (-1) and a slightly lower decay factor (0.95). This is based on the observation that a higher bias might be needed for volatile workloads, while a lower decay factor could help in reducing the impact of frequent evictions. ...
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=-1
+Producing Plan to Kafka...
+New test detected: hot_cold_shift (was: daily_pattern). Resetting state and resuming processing...
+Brain state reset: cleared all adaptation history, strategies, and parameters.
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.4%
+DEBUG - Baseline: hits=10, misses=4990, HR=0.0020, delta=0.0000
+DEBUG - Aura: hits=60, misses=4940, HR=0.0120, delta=0.0000
+DEBUG: WindowHits[Aura: 60, Base: 10] -> DeltaHR[Aura: 0.000000, Base: 0.000000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.002000, Aura=0.012000, Diff=-0.010000
+Adaptation State: NORMAL (volatility=0.000, opportunity_loss=0.000000 (delta-based: 0.000000 - 0.000000))
+New Best Strategy: Improvement=0.0100, Volatility=0.000, Params={}
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Saved temporal metrics: LLM call #18, AURA HR=0.0120, Baseline HR=0.0020
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 2.75s (2745.68ms)
+LLM Reasoning: The current strategy is working well, but fine-tuning the admission bias could further improve performance.  Let's try a slightly higher value for `admission_bias` to see if it helps.
+TinyLFU parameter update: decay_factor=0.9, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 96.2%
+DEBUG - Baseline: hits=78, misses=4922, HR=0.0156, delta=0.0136
+DEBUG - Aura: hits=76, misses=4924, HR=0.0152, delta=0.0032
+DEBUG: WindowHits[Aura: 76, Base: 78] -> DeltaHR[Aura: 0.003200, Base: 0.013600] -> OppLoss: 0.010400
+Adaptation State: NORMAL (volatility=0.460, opportunity_loss=0.010400 (delta-based: 0.013600 - 0.003200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Saved temporal metrics: LLM call #19, AURA HR=0.0152, Baseline HR=0.0156
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 96.2%
+DEBUG - Baseline: hits=82, misses=4918, HR=0.0164, delta=0.0008
+DEBUG - Aura: hits=82, misses=4918, HR=0.0164, delta=0.0012
+DEBUG: WindowHits[Aura: 82, Base: 82] -> DeltaHR[Aura: 0.001200, Base: 0.000800] -> OppLoss: -0.000400
+Adaptation State: NORMAL (volatility=0.273, opportunity_loss=-0.000400 (delta-based: 0.000800 - 0.001200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.12s (3117.21ms)
+LLM Reasoning: Previous attempts with positive bias didn't yield significant improvement.  We'll try a negative bias to see if it helps prioritize the less frequently used items. A lower decay factor might also help in reducing the impact of frequent access and allowing for more stable cache behavior....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #1, AURA HR=0.0164, Baseline HR=0.0164
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 2.50s (2497.62ms)
+LLM Reasoning: Increasing the negative bias could help by prioritizing less frequently used items.  A lower decay factor might also be beneficial to reduce the impact of frequent access and allow for more stable cache behavior....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=84, misses=4916, HR=0.0168, delta=0.0004
+DEBUG - Aura: hits=84, misses=4916, HR=0.0168, delta=0.0004
+DEBUG: WindowHits[Aura: 84, Base: 84] -> DeltaHR[Aura: 0.000400, Base: 0.000400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.016800, Aura=0.016800, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.261, opportunity_loss=0.000000 (delta-based: 0.000400 - 0.000400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+Saved temporal metrics: LLM call #2, AURA HR=0.0168, Baseline HR=0.0168
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=81, misses=4919, HR=0.0162, delta=-0.0006
+DEBUG - Aura: hits=81, misses=4919, HR=0.0162, delta=-0.0006
+DEBUG: WindowHits[Aura: 81, Base: 81] -> DeltaHR[Aura: -0.000600, Base: -0.000600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.016200, Aura=0.016200, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.273, opportunity_loss=0.000000 (delta-based: -0.000600 - -0.000600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.53s (3528.16ms)
+LLM Reasoning: Increasing the `admission_bias` to 3 could help by prioritizing more frequent items in the cache. This is especially beneficial for volatile workloads where new items are constantly being introduced.  A higher `admission_bias` will give a greater weight to these new items, potentially leading to better hit ratios compared to the baseline....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #3, AURA HR=0.0162, Baseline HR=0.0162
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4500
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=88, misses=4912, HR=0.0176, delta=0.0014
+DEBUG - Aura: hits=88, misses=4912, HR=0.0176, delta=0.0014
+DEBUG: WindowHits[Aura: 88, Base: 88] -> DeltaHR[Aura: 0.001400, Base: 0.001400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.017600, Aura=0.017600, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.137, opportunity_loss=0.000000 (delta-based: 0.001400 - 0.001400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.50s (3496.80ms)
+LLM Reasoning: Increasing the `admission_bias` to 3 could help by prioritizing more frequent items in the cache. This is especially beneficial when dealing with volatile workloads where new items are constantly being introduced.  A higher `admission_bias` will give a greater weight to newly accessed items, potentially leading to better hit ratios compared to the baseline....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #4, AURA HR=0.0176, Baseline HR=0.0176
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4484
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=91, misses=4909, HR=0.0182, delta=0.0006
+DEBUG - Aura: hits=91, misses=4909, HR=0.0182, delta=0.0006
+DEBUG: WindowHits[Aura: 91, Base: 91] -> DeltaHR[Aura: 0.000600, Base: 0.000600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.018200, Aura=0.018200, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.130, opportunity_loss=0.000000 (delta-based: 0.000600 - 0.000600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.56s (2564.51ms)
+LLM Reasoning: Increasing the negative bias might help by prioritizing less frequently used items.  A lower decay factor could also be beneficial to reduce the impact of recent accesses on the cache's overall frequency....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #5, AURA HR=0.0182, Baseline HR=0.0182
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 4139
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=49, misses=4951, HR=0.0098, delta=-0.0084
+DEBUG - Aura: hits=49, misses=4951, HR=0.0098, delta=-0.0084
+DEBUG: WindowHits[Aura: 49, Base: 49] -> DeltaHR[Aura: -0.008400, Base: -0.008400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.009800, Aura=0.009800, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.238, opportunity_loss=0.000000 (delta-based: -0.008400 - -0.008400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.75s (2747.74ms)
+LLM Reasoning: While the current parameters haven't shown significant improvement, a negative bias might help prioritize less frequently used items.  A lower decay factor could also be beneficial to reduce the impact of recent accesses on the cache hit ratio....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #6, AURA HR=0.0098, Baseline HR=0.0098
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 3793
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=69, misses=4931, HR=0.0138, delta=0.0040
+DEBUG - Aura: hits=69, misses=4931, HR=0.0138, delta=0.0040
+DEBUG: WindowHits[Aura: 69, Base: 69] -> DeltaHR[Aura: 0.004000, Base: 0.004000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.013800, Aura=0.013800, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.162, opportunity_loss=0.000000 (delta-based: 0.004000 - 0.004000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.54s (3535.43ms)
+LLM Reasoning: Increasing the `admission_bias` to 3 could help by favoring more frequent items in the cache. This is especially beneficial for volatile workloads where new items are frequently added and need a higher chance of being admitted.  A higher bias value will prioritize these items, potentially leading to better hit ratios compared to the baseline....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #7, AURA HR=0.0138, Baseline HR=0.0138
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 3345
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=63, misses=4937, HR=0.0126, delta=-0.0012
+DEBUG - Aura: hits=63, misses=4937, HR=0.0126, delta=-0.0012
+DEBUG: WindowHits[Aura: 63, Base: 63] -> DeltaHR[Aura: -0.001200, Base: -0.001200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.012600, Aura=0.012600, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.168, opportunity_loss=0.000000 (delta-based: -0.001200 - -0.001200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.27s (3267.33ms)
+LLM Reasoning: Increasing the `admission_bias` to 3 could help by prioritizing more frequent items in the cache. This is especially beneficial for volatile workloads where new items are constantly being added.  A higher `admission_bias` will give a greater weight to newly accessed items, potentially leading to better hit ratios compared to the baseline....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #8, AURA HR=0.0126, Baseline HR=0.0126
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 2951
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=58, misses=4942, HR=0.0116, delta=-0.0010
+DEBUG - Aura: hits=58, misses=4942, HR=0.0116, delta=-0.0010
+DEBUG: WindowHits[Aura: 58, Base: 58] -> DeltaHR[Aura: -0.001000, Base: -0.001000] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.011600, Aura=0.011600, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.298, opportunity_loss=0.000000 (delta-based: -0.001000 - -0.001000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.64s (2643.18ms)
+LLM Reasoning: Increasing the negative bias could help by prioritizing less frequently used items.  A lower decay factor might also be beneficial to reduce the impact of recent accesses on the cache's overall frequency distribution....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #9, AURA HR=0.0116, Baseline HR=0.0116
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 2527
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=41, misses=4959, HR=0.0082, delta=-0.0034
+DEBUG - Aura: hits=41, misses=4959, HR=0.0082, delta=-0.0034
+DEBUG: WindowHits[Aura: 41, Base: 41] -> DeltaHR[Aura: -0.003400, Base: -0.003400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.008200, Aura=0.008200, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.425, opportunity_loss=0.000000 (delta-based: -0.003400 - -0.003400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.84s (2841.88ms)
+LLM Reasoning: Increasing the negative bias could help by prioritizing less frequently used items, potentially leading to a higher hit ratio.  A lower decay factor might also improve performance as it reduces the impact of older data on the cache's overall frequency....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #10, AURA HR=0.0082, Baseline HR=0.0082
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 2001
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=49, misses=4951, HR=0.0098, delta=0.0016
+DEBUG - Aura: hits=49, misses=4951, HR=0.0098, delta=0.0016
+DEBUG: WindowHits[Aura: 49, Base: 49] -> DeltaHR[Aura: 0.001600, Base: 0.001600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.009800, Aura=0.009800, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.464, opportunity_loss=0.000000 (delta-based: 0.001600 - 0.001600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.39s (3386.00ms)
+LLM Reasoning: Increasing the `admission_bias` to 3 aims to prioritize more frequent items in the cache. This is particularly beneficial for volatile workloads where new items are constantly being introduced.  A higher `admission_bias` encourages the cache to hold onto these frequently accessed items, potentially leading to a higher hit ratio....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #11, AURA HR=0.0098, Baseline HR=0.0098
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 1703
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=55, misses=4945, HR=0.0110, delta=0.0012
+DEBUG - Aura: hits=55, misses=4945, HR=0.0110, delta=0.0012
+DEBUG: WindowHits[Aura: 55, Base: 55] -> DeltaHR[Aura: 0.001200, Base: 0.001200] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.011000, Aura=0.011000, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.457, opportunity_loss=0.000000 (delta-based: 0.001200 - 0.001200))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.33s (3328.70ms)
+LLM Reasoning: Increasing the `admission_bias` to 3 could help by prioritizing more frequent items in the cache. This is especially beneficial for volatile workloads where new items are constantly being added.  A higher `admission_bias` will give a greater weight to newly accessed items, potentially leading to better hit ratios compared to the baseline....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #12, AURA HR=0.0110, Baseline HR=0.0110
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 1461
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=43, misses=4957, HR=0.0086, delta=-0.0024
+DEBUG - Aura: hits=43, misses=4957, HR=0.0086, delta=-0.0024
+DEBUG: WindowHits[Aura: 43, Base: 43] -> DeltaHR[Aura: -0.002400, Base: -0.002400] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.008600, Aura=0.008600, Diff=0.000000
+Adaptation State: NORMAL (volatility=0.427, opportunity_loss=0.000000 (delta-based: -0.002400 - -0.002400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.49s (2488.12ms)
+LLM Reasoning: Increasing the negative bias could help by prioritizing less frequently used items.  A lower decay factor might also be beneficial to reduce the impact of frequent access and allow for more stable cache behavior....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #13, AURA HR=0.0086, Baseline HR=0.0086
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 1141
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=35, misses=4965, HR=0.0070, delta=-0.0016
+DEBUG - Aura: hits=35, misses=4965, HR=0.0070, delta=-0.0016
+State transition: CacheAdaptationState.NORMAL → UNSTABLE (volatility=0.599 > 0.5)
+DEBUG: WindowHits[Aura: 35, Base: 35] -> DeltaHR[Aura: -0.001600, Base: -0.001600] -> OppLoss: 0.000000
+WARNING: Opportunity loss is near zero (0.000000). This may indicate:
+    - First snapshot (no previous values for delta)
+    - Both caches performing identically
+    - Precision issue (differences < 0.0001)
+    - Baseline total: 5000, Aura total: 5000
+    - Calculated HR: Baseline=0.007000, Aura=0.007000, Diff=0.000000
+Adaptation State: UNSTABLE (volatility=0.599, opportunity_loss=0.000000 (delta-based: -0.001600 - -0.001600))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.54s (3538.32ms)
+LLM Reasoning: Increasing the negative bias value (from 3 to -3) could help prioritize keeping less frequently used items in the cache longer. This might be beneficial for a stable workload where frequent access is not as crucial. Additionally, decreasing the decay factor to 0.8 may reduce the impact of recent accesses and allow for more consistent performance over time....
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #14, AURA HR=0.0070, Baseline HR=0.0070
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 778
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=33, misses=4967, HR=0.0066, delta=-0.0004
+DEBUG - Aura: hits=35, misses=4965, HR=0.0070, delta=0.0000
+DEBUG: WindowHits[Aura: 35, Base: 33] -> DeltaHR[Aura: 0.000000, Base: -0.000400] -> OppLoss: -0.000400
+Adaptation State: UNSTABLE (volatility=0.668, opportunity_loss=-0.000400 (delta-based: -0.000400 - 0.000000))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 3.35s (3352.67ms)
+LLM Reasoning: Increasing the `admission_bias` to 3 aims to prioritize more frequent items in the cache. This is particularly beneficial for volatile workloads where new items are frequently accessed.  A higher `admission_bias` encourages the cache to hold onto these items longer, potentially leading to a higher hit ratio....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=3
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #15, AURA HR=0.0070, Baseline HR=0.0066
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 541
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=36, misses=4964, HR=0.0072, delta=0.0006
+DEBUG - Aura: hits=39, misses=4961, HR=0.0078, delta=0.0008
+DEBUG: WindowHits[Aura: 39, Base: 36] -> DeltaHR[Aura: 0.000800, Base: 0.000600] -> OppLoss: -0.000200
+Adaptation State: UNSTABLE (volatility=0.771, opportunity_loss=-0.000200 (delta-based: 0.000600 - 0.000800))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.75s (2749.68ms)
+LLM Reasoning: The current strategy is showing positive improvement with a fine-tuned admission bias around -3.  Let's explore further by trying slightly different values for `admission_bias` to see if we can achieve even higher hit ratio. ...
+TinyLFU parameter update: decay_factor=0.8, reset_interval=50000, admission_bias=-4
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #16, AURA HR=0.0078, Baseline HR=0.0072
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+Received stats snapshot. Total events: 384
+Current Cache Usage: 94.6%
+DEBUG - Baseline: hits=32, misses=4968, HR=0.0064, delta=-0.0008
+DEBUG - Aura: hits=32, misses=4968, HR=0.0064, delta=-0.0014
+DEBUG: WindowHits[Aura: 32, Base: 32] -> DeltaHR[Aura: -0.001400, Base: -0.000800] -> OppLoss: 0.000600
+Adaptation State: UNSTABLE (volatility=1.000, opportunity_loss=0.000600 (delta-based: -0.000800 - -0.001400))
+Using FULL prompt for model: gemma2:2b (USE_PROMPT_SMALL=False)
+LLM Latency: 2.85s (2854.85ms)
+LLM Reasoning: The current strategy is working well, but fine-tuning the admission bias could further improve performance.  Let's try increasing the bias to 4 and see if it leads to a significant improvement in hit ratio....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=4
+Producing Plan to Kafka...
+Saved temporal metrics: LLM call #17, AURA HR=0.0064, Baseline HR=0.0064
+Calling LLM...
+Calling Ollama API with model: gemma2:2b
+API URL: http://ollama:11434/api/chat
+Optimized settings: num_predict=256, num_thread=4, num_ctx=2048
+LLM Latency: 3.90s (3895.56ms)
+LLM Reasoning: Increasing the `admission_bias` to 4 could help by allowing more new items to be admitted into the cache. This is especially beneficial for volatile workloads where frequent changes in data access patterns are expected.  A higher `admission_bias` encourages the cache to prioritize newer, potentially more frequently accessed items, leading to a potential improvement in hit ratio....
+TinyLFU parameter update: decay_factor=0.95, reset_interval=50000, admission_bias=4
+Producing Plan to Kafka...
+Received test_complete signal for test: hot_cold_shift (final_events: 100000)
+Resetting brain state and waiting for new test...
+Brain state reset: cleared all adaptation history, strategies, and parameters.

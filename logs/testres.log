@@ -1,0 +1,757 @@
+================================================================================
+AUTOMATED TEST RUNNER
+================================================================================
+Max events per test: 100000
+Starting at: 2026-02-11T09:56:20.475697
+================================================================================
+Initialized with max_events=100000
+Results will be saved to: /app/data/test_results
+Waiting for services to be ready...
+Prometheus is ready
+Streamer is ready
+
+================================================================================
+TEST 1/4: normal_dataset
+================================================================================
+Writing config file for first test: normal_dataset
+[CONFIG] Set current test: normal_dataset -> /app/data/test_data/normal_dataset_100k.json
+
+================================================================================
+Starting: normal_dataset
+Dataset: /app/data/test_data/normal_dataset_100k.json
+================================================================================
+Temporal metrics file reset for new test
+Flushed Redis databases (aura keys: 0, baseline keys: 0)
+Config file for normal_dataset should already be written. Waiting for streamer to start processing this test...
+[TEST] Test normal_dataset started! Streamer has processed 4000 events.
+Waiting for 100000 events to be processed...
+next_test_config available: True
+Next test will be: burst_cooldown
+Starting monitoring loop for test normal_dataset...
+Progress: 7000/100000 (7.0%)
+Progress: 7000/100000 events (7.0%)
+Progress: 11000/100000 events (11.0%)
+Progress: 15000/100000 events (15.0%)
+Progress: 18000/100000 (18.0%)
+Progress: 18000/100000 events (18.0%)
+Progress: 22000/100000 events (22.0%)
+Progress: 25000/100000 events (25.0%)
+Progress: 29000/100000 (29.0%)
+Progress: 29000/100000 events (29.0%)
+Progress: 32000/100000 events (32.0%)
+Progress: 36000/100000 events (36.0%)
+Progress: 39000/100000 (39.0%)
+Progress: 39000/100000 events (39.0%)
+Progress: 43000/100000 events (43.0%)
+Progress: 47000/100000 events (47.0%)
+Progress: 50000/100000 (50.0%)
+Progress: 50000/100000 events (50.0%)
+Progress: 54000/100000 events (54.0%)
+Progress: 57000/100000 events (57.0%)
+Progress: 61000/100000 (61.0%)
+Progress: 61000/100000 events (61.0%)
+Progress: 64000/100000 events (64.0%)
+Progress: 68000/100000 events (68.0%)
+Progress: 72000/100000 (72.0%)
+Progress: 72000/100000 events (72.0%)
+Progress: 75000/100000 events (75.0%)
+Progress: 79000/100000 events (79.0%)
+Progress: 82000/100000 (82.0%)
+Progress: 82000/100000 events (82.0%)
+Progress: 86000/100000 events (86.0%)
+Progress: 89000/100000 events (89.0%)
+Progress: 93000/100000 (93.0%)
+Progress: 93000/100000 (93.0%) - next_test_config available: burst_cooldown
+Progress: 93000/100000 events (93.0%)
+Progress: 96000/100000 (96.0%) - next_test_config available: burst_cooldown
+Streamer near completion (96000/100000, 96.0%), writing config file for NEXT test: burst_cooldown...
+Next test file: /app/data/test_data/02_burst_cooldown_100k.json
+[CONFIG] Set current test: burst_cooldown -> /app/data/test_data/02_burst_cooldown_100k.json
+Config file written for burst_cooldown, streamer will pick it up when current test completes
+Progress: 96000/100000 events (96.0%)
+Progress: 100000/100000 (100.0%)
+Progress: 100000/100000 (100.0%) - next_test_config available: burst_cooldown
+Processed 100000 events (target: 100000)
+
+Results for normal_dataset:
+  Events processed: 99999
+  Time elapsed: 55.12s (1814 events/s)
+  Baseline hit rate: 0.0035
+  AURA hit rate: 0.0042
+  Improvement: +0.0007 (+21.14%)
+  LLM calls: 0
+  LLM errors: 0
+Generating temporal graphs for normal_dataset...
+LLM Model: gemma2:2b
+Input metrics file: data/temporal_metrics/llm_calls_temporal.json
+Output directory: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset
+Temporal graphs generated successfully in: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset
+
+=== Summary Statistics ===
+Total LLM calls: 15
+
+Cumulative Hit Rates:
+  Baseline: 0.0236
+  AURA: 0.0144
+  Improvement: -0.0092
+
+Window Hit Rates (mean):
+  Baseline: 0.0236
+  AURA: 0.0144
+  Improvement: -0.0092
+
+Decay Factor:
+  Changes: 1
+  Mean: 0.8500
+  Range: [0.8500, 0.8500]
+
+Reset Interval:
+  Changes: 1
+  Mean: 50000
+  Range: [50000, 50000]
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset/hit_rate_cumulative.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset/improvement.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset/sketch_resets.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset/decay_factor.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset/reset_interval.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset/workload_volatility.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset/total_events.png
+
+Generated 7 graphs in: /app/data/test_results/temporal_graphs/gemma2_2b/normal_dataset
+
+
+Generating report for test 1...
+
+Report saved to: /app/data/test_results/reports/report_normal_dataset_20260211_095724.txt
+
+================================================================================
+TEST REPORT: normal_dataset
+================================================================================
+Timestamp: 2026-02-11T09:57:22.759496
+Dataset: /app/data/test_data/normal_dataset_100k.json
+
+PERFORMANCE METRICS:
+  Events Processed: 99999
+  Time Elapsed: 55.12 seconds
+  Throughput: 1814 events/second
+
+CACHE PERFORMANCE:
+  Baseline Hit Rate: 0.0035 (0.35%)
+  AURA Hit Rate: 0.0042 (0.42%)
+  Improvement: +0.0007 (+21.14%)
+
+  Baseline:
+    Hits: 350
+    Misses: 99649
+    Total: 99999
+  AURA:
+    Hits: 424
+    Misses: 99575
+    Total: 99999
+
+LLM METRICS:
+  LLM Calls: 0
+  LLM Errors: 0
+  LLM Latency: 0.00 ms
+
+TINYLFU METRICS:
+  Admissions: 5411
+  Rejections: 311353
+  Admission Rate: 1.71%
+  Resets: 1
+  Decay Applications: 14
+  Reset Interval Updates: 14
+
+SAFETY GUARD:
+SYSTEM METRICS:
+  Redis Memory Usage: 1195344 bytes (1.14 MB)
+
+METRICS DELTA (from test start):
+  TinyLFU Resets: +1
+
+METADATA:
+  dataset_type: normal
+  source: C:\Users\salva\Desktop\LLM-Cache\data\log_15M_subset.txt
+  events_count: 100000
+  max_events: 100000
+
+================================================================================
+
+Test 1 completed. Resetting Redis for next test...
+Resetting Redis databases completely...
+Redis databases reset successfully (both empty)
+
+================================================================================
+TEST 2/4: burst_cooldown
+================================================================================
+Resetting Redis databases completely...
+[WARNING] Redis databases may not be empty: aura=1, baseline=0
+Test 2/4: burst_cooldown - config file will be written when previous test is near completion
+
+================================================================================
+Starting: burst_cooldown
+Dataset: /app/data/test_data/02_burst_cooldown_100k.json
+================================================================================
+Temporal metrics file reset for new test
+Flushed Redis databases (aura keys: 1, baseline keys: 1)
+Config file for burst_cooldown should already be written. Waiting for streamer to start processing this test...
+[TEST] Test burst_cooldown started! Streamer has processed 12000 events.
+Waiting for 100000 events to be processed...
+next_test_config available: True
+Next test will be: daily_pattern
+Starting monitoring loop for test burst_cooldown...
+Progress: 16000/100000 (16.0%)
+Progress: 16000/100000 events (16.0%)
+Progress: 20000/100000 events (20.0%)
+Progress: 23000/100000 events (23.0%)
+Progress: 27000/100000 (27.0%)
+Progress: 27000/100000 events (27.0%)
+Progress: 30000/100000 events (30.0%)
+Progress: 34000/100000 events (34.0%)
+Progress: 38000/100000 (38.0%)
+Progress: 38000/100000 events (38.0%)
+Progress: 41000/100000 events (41.0%)
+Progress: 45000/100000 events (45.0%)
+Progress: 48000/100000 (48.0%)
+Progress: 48000/100000 events (48.0%)
+Progress: 52000/100000 events (52.0%)
+Progress: 55000/100000 events (55.0%)
+Progress: 59000/100000 (59.0%)
+Progress: 59000/100000 events (59.0%)
+Progress: 63000/100000 events (63.0%)
+Progress: 66000/100000 events (66.0%)
+Progress: 70000/100000 (70.0%)
+Progress: 70000/100000 events (70.0%)
+Progress: 73000/100000 events (73.0%)
+Progress: 77000/100000 events (77.0%)
+Progress: 80000/100000 (80.0%)
+Progress: 80000/100000 events (80.0%)
+Progress: 84000/100000 events (84.0%)
+Progress: 87000/100000 events (87.0%)
+Progress: 91000/100000 (91.0%)
+Progress: 91000/100000 (91.0%) - next_test_config available: daily_pattern
+Progress: 91000/100000 events (91.0%)
+Progress: 94000/100000 (94.0%) - next_test_config available: daily_pattern
+Progress: 94000/100000 events (94.0%)
+Progress: 98000/100000 (98.0%) - next_test_config available: daily_pattern
+Streamer near completion (98000/100000, 98.0%), writing config file for NEXT test: daily_pattern...
+Next test file: /app/data/test_data/04_daily_pattern_100k.json
+[CONFIG] Set current test: daily_pattern -> /app/data/test_data/04_daily_pattern_100k.json
+Config file written for daily_pattern, streamer will pick it up when current test completes
+Progress: 98000/100000 events (98.0%)
+Progress: 100000/100000 (100.0%)
+Progress: 100000/100000 (100.0%) - next_test_config available: daily_pattern
+Processed 100000 events (target: 100000)
+
+Results for burst_cooldown:
+  Events processed: 99999
+  Time elapsed: 51.12s (1956 events/s)
+  Baseline hit rate: 0.0071
+  AURA hit rate: 0.0073
+  Improvement: +0.0002 (+2.83%)
+  LLM calls: 0
+  LLM errors: 0
+Generating temporal graphs for burst_cooldown...
+LLM Model: gemma2:2b
+Input metrics file: data/temporal_metrics/llm_calls_temporal.json
+Output directory: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown
+Temporal graphs generated successfully in: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown
+
+=== Summary Statistics ===
+Total LLM calls: 16
+
+Cumulative Hit Rates:
+  Baseline: 0.0077
+  AURA: 0.0077
+  Improvement: +0.0000
+
+Window Hit Rates (mean):
+  Baseline: 0.0077
+  AURA: 0.0077
+  Improvement: +0.0000
+
+Decay Factor:
+  Changes: 16
+  Mean: 0.8594
+  Range: [0.8000, 0.9500]
+
+Reset Interval:
+  Changes: 16
+  Mean: 50000
+  Range: [50000, 50000]
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown/hit_rate_cumulative.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown/improvement.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown/sketch_resets.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown/decay_factor.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown/reset_interval.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown/workload_volatility.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown/total_events.png
+
+Generated 7 graphs in: /app/data/test_results/temporal_graphs/gemma2_2b/burst_cooldown
+
+
+Generating report for test 2...
+
+Report saved to: /app/data/test_results/reports/report_burst_cooldown_20260211_095826.txt
+
+================================================================================
+TEST REPORT: burst_cooldown
+================================================================================
+Timestamp: 2026-02-11T09:58:24.990464
+Dataset: /app/data/test_data/02_burst_cooldown_100k.json
+
+PERFORMANCE METRICS:
+  Events Processed: 99999
+  Time Elapsed: 51.12 seconds
+  Throughput: 1956 events/second
+
+CACHE PERFORMANCE:
+  Baseline Hit Rate: 0.0071 (0.71%)
+  AURA Hit Rate: 0.0073 (0.73%)
+  Improvement: +0.0002 (+2.83%)
+
+  Baseline:
+    Hits: 706
+    Misses: 99293
+    Total: 99999
+  AURA:
+    Hits: 726
+    Misses: 99273
+    Total: 99999
+
+LLM METRICS:
+  LLM Calls: 0
+  LLM Errors: 0
+  LLM Latency: 0.00 ms
+
+TINYLFU METRICS:
+  Admissions: 5973
+  Rejections: 504954
+  Admission Rate: 1.17%
+  Resets: 2
+  Decay Applications: 32
+  Reset Interval Updates: 32
+
+SAFETY GUARD:
+SYSTEM METRICS:
+  Redis Memory Usage: 1174872 bytes (1.12 MB)
+
+METRICS DELTA (from test start):
+  TinyLFU Resets: +1
+
+METADATA:
+  dataset_type: scenario
+  scenario_type: burst_cooldown
+  scenario_name: burst_cooldown
+  source_file: C:\Users\salva\Desktop\LLM-Cache\data\scenarios\final\02_burst_cooldown.json
+  generated_at: 2026-02-02T19:18:50.670408
+  total_events: 17877905
+  date_range: {'start': '2013-05-04 00:00:00', 'end': '2013-05-10 23:59:59'}
+  duration_seconds: 604799.0
+  events_per_second: 29.560076984254273
+  quality_score: 1.0
+  selection_reason: Highest intensity burst (309.6x baseline) with high variability (CV=13.10). Peak on 2013-05-07 with 25389 events.
+  burst_item_id: 2573884
+  burst_date: 2013-05-07
+  intensity: 309.6219512195122
+  cv: 13.099895732907607
+  events_count: 100000
+  max_events: 100000
+
+================================================================================
+
+Test 2 completed. Resetting Redis for next test...
+Resetting Redis databases completely...
+Redis databases reset successfully (both empty)
+
+================================================================================
+TEST 3/4: daily_pattern
+================================================================================
+Resetting Redis databases completely...
+[WARNING] Redis databases may not be empty: aura=1, baseline=0
+Test 3/4: daily_pattern - config file will be written when previous test is near completion
+
+================================================================================
+Starting: daily_pattern
+Dataset: /app/data/test_data/04_daily_pattern_100k.json
+================================================================================
+Temporal metrics file reset for new test
+Flushed Redis databases (aura keys: 1, baseline keys: 0)
+Config file for daily_pattern should already be written. Waiting for streamer to start processing this test...
+[TEST] Test daily_pattern started! Streamer has processed 14000 events.
+Waiting for 100000 events to be processed...
+next_test_config available: True
+Next test will be: hot_cold_shift
+Starting monitoring loop for test daily_pattern...
+Progress: 18000/100000 (18.0%)
+Progress: 18000/100000 events (18.0%)
+Progress: 21000/100000 events (21.0%)
+Progress: 25000/100000 events (25.0%)
+Progress: 29000/100000 (29.0%)
+Progress: 29000/100000 events (29.0%)
+Progress: 32000/100000 events (32.0%)
+Progress: 36000/100000 events (36.0%)
+Progress: 40000/100000 (40.0%)
+Progress: 40000/100000 events (40.0%)
+Progress: 43000/100000 events (43.0%)
+Progress: 47000/100000 events (47.0%)
+Progress: 50000/100000 (50.0%)
+Progress: 50000/100000 events (50.0%)
+Progress: 54000/100000 events (54.0%)
+Progress: 58000/100000 events (58.0%)
+Progress: 61000/100000 (61.0%)
+Progress: 61000/100000 events (61.0%)
+Progress: 65000/100000 events (65.0%)
+Progress: 68000/100000 events (68.0%)
+Progress: 72000/100000 (72.0%)
+Progress: 72000/100000 events (72.0%)
+Progress: 75000/100000 events (75.0%)
+Progress: 78000/100000 events (78.0%)
+Progress: 82000/100000 (82.0%)
+Progress: 82000/100000 events (82.0%)
+Progress: 85000/100000 events (85.0%)
+Progress: 89000/100000 events (89.0%)
+Progress: 92000/100000 (92.0%)
+Progress: 92000/100000 (92.0%) - next_test_config available: hot_cold_shift
+Progress: 92000/100000 events (92.0%)
+Progress: 96000/100000 (96.0%) - next_test_config available: hot_cold_shift
+Streamer near completion (96000/100000, 96.0%), writing config file for NEXT test: hot_cold_shift...
+Next test file: /app/data/test_data/01_hot_cold_shift_100k.json
+[CONFIG] Set current test: hot_cold_shift -> /app/data/test_data/01_hot_cold_shift_100k.json
+Config file written for hot_cold_shift, streamer will pick it up when current test completes
+Progress: 96000/100000 events (96.0%)
+Progress: 100000/100000 (100.0%)
+Progress: 100000/100000 (100.0%) - next_test_config available: hot_cold_shift
+Processed 100000 events (target: 100000)
+
+Results for daily_pattern:
+  Events processed: 99999
+  Time elapsed: 49.14s (2035 events/s)
+  Baseline hit rate: 0.0251
+  AURA hit rate: 0.0254
+  Improvement: +0.0003 (+1.03%)
+  LLM calls: 0
+  LLM errors: 0
+Generating temporal graphs for daily_pattern...
+LLM Model: gemma2:2b
+Input metrics file: data/temporal_metrics/llm_calls_temporal.json
+Output directory: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern
+Temporal graphs generated successfully in: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern
+
+=== Summary Statistics ===
+Total LLM calls: 15
+
+Cumulative Hit Rates:
+  Baseline: 0.0267
+  AURA: 0.0267
+  Improvement: -0.0000
+
+Window Hit Rates (mean):
+  Baseline: 0.0267
+  AURA: 0.0267
+  Improvement: -0.0000
+
+Decay Factor:
+  Changes: 15
+  Mean: 0.8867
+  Range: [0.8000, 0.9500]
+
+Reset Interval:
+  Changes: 15
+  Mean: 53333
+  Range: [50000, 100000]
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern/hit_rate_cumulative.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern/improvement.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern/sketch_resets.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern/decay_factor.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern/reset_interval.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern/workload_volatility.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern/total_events.png
+
+Generated 7 graphs in: /app/data/test_results/temporal_graphs/gemma2_2b/daily_pattern
+
+
+Generating report for test 3...
+
+Report saved to: /app/data/test_results/reports/report_daily_pattern_20260211_095927.txt
+
+================================================================================
+TEST REPORT: daily_pattern
+================================================================================
+Timestamp: 2026-02-11T09:59:25.189732
+Dataset: /app/data/test_data/04_daily_pattern_100k.json
+
+PERFORMANCE METRICS:
+  Events Processed: 99999
+  Time Elapsed: 49.14 seconds
+  Throughput: 2035 events/second
+
+CACHE PERFORMANCE:
+  Baseline Hit Rate: 0.0251 (2.51%)
+  AURA Hit Rate: 0.0254 (2.54%)
+  Improvement: +0.0003 (+1.03%)
+
+  Baseline:
+    Hits: 2514
+    Misses: 97485
+    Total: 99999
+  AURA:
+    Hits: 2540
+    Misses: 97459
+    Total: 99999
+
+LLM METRICS:
+  LLM Calls: 0
+  LLM Errors: 0
+  LLM Latency: 0.00 ms
+
+TINYLFU METRICS:
+  Admissions: 6515
+  Rejections: 708977
+  Admission Rate: 0.91%
+  Resets: 3
+  Decay Applications: 52
+  Reset Interval Updates: 52
+
+SAFETY GUARD:
+SYSTEM METRICS:
+  Redis Memory Usage: 1174904 bytes (1.12 MB)
+
+METRICS DELTA (from test start):
+  TinyLFU Resets: +1
+
+METADATA:
+  dataset_type: scenario
+  scenario_type: daily_pattern
+  scenario_name: daily_pattern
+  source_file: C:\Users\salva\Desktop\LLM-Cache\data\scenarios\final\04_daily_pattern.json
+  generated_at: 2026-02-02T19:39:40.600557
+  total_events: 22629267
+  date_range: {'start': '2013-09-22 00:00:00', 'end': '2013-09-27 23:59:59'}
+  duration_seconds: 518399.0
+  events_per_second: 43.652219622337235
+  quality_score: 1.0
+  selection_reason: Strong daily pattern with autocorrelation 0.660 (threshold: 0.6). Found 3 cycles with period 2 days. Window stability: 0.021.
+  cycle_dates: ['2013-09-22', '2013-09-24', '2013-09-26']
+  period_days: 2
+  autocorrelation: 0.6600173797118095
+  events_count: 100000
+  max_events: 100000
+
+================================================================================
+
+Test 3 completed. Resetting Redis for next test...
+Resetting Redis databases completely...
+Redis databases reset successfully (both empty)
+
+================================================================================
+TEST 4/4: hot_cold_shift
+================================================================================
+Resetting Redis databases completely...
+[WARNING] Redis databases may not be empty: aura=1, baseline=0
+Test 4/4: hot_cold_shift - config file will be written when previous test is near completion
+
+================================================================================
+Starting: hot_cold_shift
+Dataset: /app/data/test_data/01_hot_cold_shift_100k.json
+================================================================================
+Temporal metrics file reset for new test
+Flushed Redis databases (aura keys: 1, baseline keys: 1)
+Config file for hot_cold_shift should already be written. Waiting for streamer to start processing this test...
+[TEST] Test hot_cold_shift started! Streamer has processed 11000 events.
+Waiting for 100000 events to be processed...
+next_test_config available: False
+Starting monitoring loop for test hot_cold_shift...
+Progress: 15000/100000 (15.0%)
+WARNING: No next_test_config available for test hot_cold_shift
+Progress: 15000/100000 events (15.0%)
+Progress: 18000/100000 events (18.0%)
+Progress: 22000/100000 events (22.0%)
+Progress: 25000/100000 (25.0%)
+Progress: 25000/100000 events (25.0%)
+Progress: 29000/100000 events (29.0%)
+Progress: 32000/100000 events (32.0%)
+Progress: 35000/100000 (35.0%)
+Progress: 35000/100000 events (35.0%)
+Progress: 39000/100000 events (39.0%)
+Progress: 42000/100000 events (42.0%)
+Progress: 46000/100000 (46.0%)
+Progress: 46000/100000 events (46.0%)
+Progress: 49000/100000 events (49.0%)
+Progress: 53000/100000 events (53.0%)
+Progress: 56000/100000 (56.0%)
+Progress: 56000/100000 events (56.0%)
+Progress: 59000/100000 events (59.0%)
+Progress: 63000/100000 events (63.0%)
+Progress: 66000/100000 (66.0%)
+Progress: 66000/100000 events (66.0%)
+Progress: 70000/100000 events (70.0%)
+Progress: 73000/100000 events (73.0%)
+Progress: 76000/100000 (76.0%)
+Progress: 76000/100000 events (76.0%)
+Progress: 80000/100000 events (80.0%)
+Progress: 83000/100000 events (83.0%)
+Progress: 86000/100000 (86.0%)
+Progress: 86000/100000 events (86.0%)
+Progress: 89000/100000 events (89.0%)
+Progress: 93000/100000 events (93.0%)
+Progress: 96000/100000 (96.0%)
+Progress: 96000/100000 events (96.0%)
+Progress: 99000/100000 events (99.0%)
+Processed 100000 events (target: 100000)
+
+Results for hot_cold_shift:
+  Events processed: 99999
+  Time elapsed: 54.12s (1848 events/s)
+  Baseline hit rate: 0.0116
+  AURA hit rate: 0.0121
+  Improvement: +0.0005 (+4.58%)
+  LLM calls: 0
+  LLM errors: 0
+Generating temporal graphs for hot_cold_shift...
+LLM Model: gemma2:2b
+Input metrics file: data/temporal_metrics/llm_calls_temporal.json
+Output directory: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift
+Temporal graphs generated successfully in: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift
+
+=== Summary Statistics ===
+Total LLM calls: 17
+
+Cumulative Hit Rates:
+  Baseline: 0.0116
+  AURA: 0.0117
+  Improvement: +0.0001
+
+Window Hit Rates (mean):
+  Baseline: 0.0116
+  AURA: 0.0117
+  Improvement: +0.0001
+
+Decay Factor:
+  Changes: 17
+  Mean: 0.8676
+  Range: [0.8000, 0.9500]
+
+Reset Interval:
+  Changes: 17
+  Mean: 50000
+  Range: [50000, 50000]
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift/hit_rate_cumulative.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift/improvement.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift/sketch_resets.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift/decay_factor.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift/reset_interval.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift/workload_volatility.png
+Graph saved: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift/total_events.png
+
+Generated 7 graphs in: /app/data/test_results/temporal_graphs/gemma2_2b/hot_cold_shift
+
+
+Generating report for test 4...
+
+Report saved to: /app/data/test_results/reports/report_hot_cold_shift_20260211_100032.txt
+
+================================================================================
+TEST REPORT: hot_cold_shift
+================================================================================
+Timestamp: 2026-02-11T10:00:30.475258
+Dataset: /app/data/test_data/01_hot_cold_shift_100k.json
+
+PERFORMANCE METRICS:
+  Events Processed: 99999
+  Time Elapsed: 54.12 seconds
+  Throughput: 1848 events/second
+
+CACHE PERFORMANCE:
+  Baseline Hit Rate: 0.0116 (1.16%)
+  AURA Hit Rate: 0.0121 (1.21%)
+  Improvement: +0.0005 (+4.58%)
+
+  Baseline:
+    Hits: 1157
+    Misses: 98842
+    Total: 99999
+  AURA:
+    Hits: 1210
+    Misses: 98789
+    Total: 99999
+
+LLM METRICS:
+  LLM Calls: 0
+  LLM Errors: 0
+  LLM Latency: 0.00 ms
+
+TINYLFU METRICS:
+  Admissions: 7125
+  Rejections: 905998
+  Admission Rate: 0.78%
+  Resets: 4
+  Decay Applications: 73
+  Reset Interval Updates: 73
+
+SAFETY GUARD:
+SYSTEM METRICS:
+  Redis Memory Usage: 1174904 bytes (1.12 MB)
+
+METRICS DELTA (from test start):
+  TinyLFU Resets: +1
+
+METADATA:
+  dataset_type: scenario
+  scenario_type: hot_cold_shift
+  scenario_name: hot_cold_shift
+  source_file: C:\Users\salva\Desktop\LLM-Cache\data\scenarios\final\01_hot_cold_shift.json
+  generated_at: 2026-02-02T19:46:55.191725
+  total_events: 4711718
+  date_range: {'start': '2013-04-01 00:00:00', 'end': '2013-05-01 23:59:59'}
+  duration_seconds: 2678399.0
+  events_per_second: 1.7591546293140043
+  quality_score: 1.0
+  selection_reason: Minimal overlap (0.0%) with maximum temporal separation (30 days). Score: 1.000
+  hot_date: 2013-04-01
+  cold_date: 2013-05-01
+  overlap: 0.0
+  days_apart: 30
+  events_count: 100000
+  max_events: 100000
+
+================================================================================
+
+Results saved to: /app/data/test_results/test_results_20260211_100032.json
+
+================================================================================
+FINAL SUMMARY REPORT
+================================================================================
+
+Total tests completed: 4
+Completed at: 2026-02-11T10:00:32.439097
+
+Test Results Summary:
+--------------------------------------------------------------------------------
+1. normal_dataset:
+   Baseline HR: 0.0035 | AURA HR: 0.0042 | Improvement: +0.0007 (+21.14%)
+   Time: 55.12s | Events: 99999
+2. burst_cooldown:
+   Baseline HR: 0.0071 | AURA HR: 0.0073 | Improvement: +0.0002 (+2.83%)
+   Time: 51.12s | Events: 99999
+3. daily_pattern:
+   Baseline HR: 0.0251 | AURA HR: 0.0254 | Improvement: +0.0003 (+1.03%)
+   Time: 49.14s | Events: 99999
+4. hot_cold_shift:
+   Baseline HR: 0.0116 | AURA HR: 0.0121 | Improvement: +0.0005 (+4.58%)
+   Time: 54.12s | Events: 99999
+
+--------------------------------------------------------------------------------
+AVERAGES:
+  Baseline Hit Rate: 0.0118
+  AURA Hit Rate: 0.0123
+  Average Improvement: +0.0004
+  Total LLM Calls: 0
+  Total LLM Errors: 0
+
+Detailed results saved to: /app/data/test_results/test_results_20260211_100032.json
+Individual reports saved to: /app/data/test_results/reports
+
+================================================================================
+ALL TESTS COMPLETED
+================================================================================
