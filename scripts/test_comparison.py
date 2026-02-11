@@ -35,7 +35,7 @@ class ComparisonTester:
     Esegue test comparativi tra TinyLFU baseline e TinyLFU+LLM.
     """
     
-    def __init__(self, max_events: int = 100000):
+    def __init__(self, max_events: int = 1000000):
         """
         Args:
             max_events: Numero massimo di eventi da processare per test
@@ -340,8 +340,8 @@ def main():
     parser.add_argument(
         "--max-events",
         type=int,
-        default=100000,
-        help="Numero massimo di eventi da processare per test (default: 100000)"
+        default=1000000,
+        help="Numero massimo di eventi da processare per test (default: 1000000)"
     )
     parser.add_argument(
         "--scenario",

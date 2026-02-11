@@ -95,7 +95,7 @@ def save_events_to_json(events: Iterator[Tuple[int, str, str, str]], output_path
     return events_saved
 
 
-def prepare_normal_dataset(max_events: int = 100000, output_dir: Path = None):
+def prepare_normal_dataset(max_events: int = 1000000, output_dir: Path = None):
     """
     Prepara file di test dal dataset normale.
     
@@ -137,7 +137,7 @@ def prepare_normal_dataset(max_events: int = 100000, output_dir: Path = None):
     return output_path, json_output_path
 
 
-def prepare_scenario(scenario_path: Path, max_events: int = 100000, output_dir: Path = None):
+def prepare_scenario(scenario_path: Path, max_events: int = 1000000, output_dir: Path = None):
     """
     Prepara file di test da uno scenario.
     
@@ -183,7 +183,7 @@ def prepare_scenario(scenario_path: Path, max_events: int = 100000, output_dir: 
     return csv_output_path, json_output_path
 
 
-def prepare_all(max_events: int = 100000, output_dir: Path = None):
+def prepare_all(max_events: int = 1000000, output_dir: Path = None):
     """
     Prepara tutti i file di test: dataset normale + tutti gli scenari.
     
@@ -273,8 +273,8 @@ def main():
     parser.add_argument(
         "--max-events",
         type=int,
-        default=100000,
-        help="Numero di eventi da estrarre per dataset (default: 100000)"
+        default=1000000,
+        help="Numero di eventi da estrarre per dataset (default: 1000000)"
     )
     parser.add_argument(
         "--scenario",

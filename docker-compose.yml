@@ -35,24 +35,6 @@ services:
     volumes:
       - ./data/mongodb:/data/db
 
-  # executor:
-  #   build:
-  #     context: ./executor
-  #     dockerfile: Dockerfile.rust
-  #   container_name: policy-executor
-  #   ports:
-  #     - "9097:9097"
-  #   depends_on:
-  #     kafka:
-  #       condition: service_healthy
-  #     kafka-init:
-  #       condition: service_completed_successfully
-  #     redis-llm:
-  #       condition: service_healthy
-  #     streamer:
-  #       condition: service_started
-  # NOTE: Executor Rust is disabled - all functionality moved to Python streamer.py policy_listener
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
@@ -247,7 +229,7 @@ services:
     env_file:
       - .env
     environment:
-      - MAX_EVENTS=${MAX_EVENTS:-100000}
+      - MAX_EVENTS=${MAX_EVENTS:-1000000}
       - OLLAMA_HOST=${OLLAMA_HOST:-ollama}
     restart: "no"
 

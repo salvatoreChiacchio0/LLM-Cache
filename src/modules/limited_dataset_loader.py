@@ -14,7 +14,7 @@ class LimitedDatasetLoader:
     Utile per test comparativi senza processare tutto il dataset.
     """
     
-    def __init__(self, log_file: str = LOG_FILE, max_events: int = 100000):
+    def __init__(self, log_file: str = LOG_FILE, max_events: int = 1000000):
         """
         Args:
             log_file: Path al file CSV del dataset

@@ -20,14 +20,14 @@ from src.modules.limited_dataset_loader import LimitedDatasetLoader
 from src.core.config import LOG_FILE, LOG_DELIMITER, FILE_ENCODING
 
 
-def create_test_file(dataset_name, source_path, max_events=100000):
+def create_test_file(dataset_name, source_path, max_events=1000000):
     """
     Crea un file di test da 100k eventi.
     
     Args:
         dataset_name: Nome del dataset (es: "normal_dataset", "02_burst_cooldown")
         source_path: Path al file sorgente
-        max_events: Numero di eventi da estrarre (default: 100000)
+        max_events: Numero di eventi da estrarre (default: 1000000)
     
     Returns:
         Path al file JSON creato
@@ -108,7 +108,7 @@ def create_test_file(dataset_name, source_path, max_events=100000):
 
 def main():
     """Crea i 4 file di test richiesti."""
-    max_events = 100000
+    max_events = 1000000
     
     print("="*60)
     print("CREATING 4 TEST FILES (100k events each)")

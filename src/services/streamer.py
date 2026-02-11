@@ -27,7 +27,7 @@ from ..modules.metrics import (
 )
 from ..modules.tinylfu import TinyLFU
 
-PLAN_EVERY_N_EVENTS = 5000
+PLAN_EVERY_N_EVENTS = 10000
 PLAN_EVERY_N_EVENTS_VOLATILE = 2000
 PLAN_EVERY_N_EVENTS_ATTACK_MODE = 1500
 VOLATILITY_THRESHOLD_FOR_FAST_SNAPSHOTS = 0.3
@@ -288,7 +288,7 @@ def run_streamer():
         elif test_dataset.endswith('.csv'):
             generator = PreprocessedLoader(test_dataset)
         else:
-            generator = LimitedDatasetLoader(log_file=test_dataset, max_events=max_events if max_events > 0 else 100000)
+            generator = LimitedDatasetLoader(log_file=test_dataset, max_events=max_events if max_events > 0 else 1000000)
     else:
         test_data_dir = Path("data/test_data")
         default_test_files = [
@@ -446,7 +446,7 @@ def run_streamer():
                                     elif new_dataset.endswith('.csv'):
                                         generator = PreprocessedLoader(new_dataset)
                                     else:
-                                        generator = LimitedDatasetLoader(log_file=new_dataset, max_events=new_max_events if new_max_events > 0 else 100000)
+                                        generator = LimitedDatasetLoader(log_file=new_dataset, max_events=new_max_events if new_max_events > 0 else 1000000)
                                     
                                     test_dataset = new_dataset
                                     max_events = new_max_events
@@ -574,7 +574,7 @@ def run_streamer():
                                         elif new_dataset.endswith('.json'):
                                             generator = ScenarioLoader(new_dataset, max_events=new_max_events if new_max_events > 0 else None)
                                         elif new_dataset.endswith('.csv'):
-                                            generator = LimitedDatasetLoader(filepath=Path(new_dataset), max_events=new_max_events if new_max_events > 0 else 100000)
+                                            generator = LimitedDatasetLoader(filepath=Path(new_dataset), max_events=new_max_events if new_max_events > 0 else 1000000)
                                         else:
                                             print(f"WARNING: Unknown dataset type for {new_dataset}, defaulting to TrafficGenerator.")
                                             generator = TrafficGenerator()

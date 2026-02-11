@@ -219,7 +219,7 @@ class PrometheusMetricsCollector:
 class TestRunner:
     """Esegue test automatici su tutti i dataset."""
     
-    def __init__(self, max_events: int = 100000):
+    def __init__(self, max_events: int = 1000000):
         self.max_events = max_events
         self.results_dir = project_root / "data" / "test_results"
         self.results_dir.mkdir(parents=True, exist_ok=True)
@@ -1159,7 +1159,7 @@ class TestRunner:
 
 def main():
     """Main entry point per il test runner."""
-    max_events = int(os.getenv("MAX_EVENTS", "100000"))
+    max_events = int(os.getenv("MAX_EVENTS", "1000000"))
     
     print("="*80)
     print("AUTOMATED TEST RUNNER")
